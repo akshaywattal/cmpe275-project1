@@ -116,6 +116,7 @@ public class NetworkManager {
 					HeartbeatManager.getInstance().addOutgoingChannel(req.getNodeId(), isa.getHostName(),
 							isa.getPort(), channel, sa);
 					
+					HeartbeatConnector.getInstance().getMonitors();
 					//Management leaderAnnounce = sendLeader();		
 					//logger.info(channel.localAddress().toString());
 					

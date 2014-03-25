@@ -91,6 +91,14 @@ public class HeartbeatConnector extends Thread {
 		monitors.remove(hm);
 	}
 
+	
+	public ConcurrentLinkedQueue<HeartMonitor> getMonitors() {
+		return monitors;
+	}
+
+	public void setMonitors(ConcurrentLinkedQueue<HeartMonitor> monitors) {
+		this.monitors = monitors;
+	}
 
 	@Override
 	public void run() {

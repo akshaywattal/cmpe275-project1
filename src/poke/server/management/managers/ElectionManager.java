@@ -16,7 +16,9 @@
 package poke.server.management.managers;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +27,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import poke.server.conf.NodeDesc;
 import poke.server.conf.ServerConf;
 import poke.server.management.ManagementQueue;
 import eye.Comm.LeaderElection;
@@ -96,6 +99,32 @@ public class ElectionManager {
 		if (req.getVote().getNumber() == VoteAction.ELECTION_VALUE) {
 			// an election is declared!
 			logger.info("Election Started!");
+			int rounds = Integer.parseInt(conf.getServer().getProperty("diameter"));
+			for(int i=0; i<rounds;i++)
+			{
+				LeaderElection.Builder le = LeaderElection.newBuilder();
+				le.setNodeId(conf.getServer().getProperty("node.id"));
+				le.setBallotId(conf.getServer().getProperty("leader.id"));
+				//System.out.println(leaderId);
+				le.setVote(VoteAction.NOMINATE);
+				le.setDesc(conf.getServer().getProperty("leader.id"));
+				Management.Builder msg = Management.newBuilder();
+				msg.setElection(le.build());
+				
+				for (NodeDesc nn : conf.getNearest().getNearestNodes().values()) {
+					try
+					{ InetSocketAddress isa = new InetSocketAddress( nn.getHost(), nn.getMgmtPort());
+					ChannelFuture cf = ManagementQueue.connect(isa);
+					cf.awaitUninterruptibly(50001);
+					if(cf.isDone()&&cf.isSuccess())
+					cf.channel().writeAndFlush(msg.build()); }
+															
+					catch(Exception e){logger.info("Election Message refused by " + nn.getHost() + ":" +nn.getMgmtPort());}
+				}
+				
+			}
+			
+			
 			} else if (req.getVote().getNumber() == VoteAction.DECLAREVOID_VALUE) {
 			// no one was elected, I am dropping into standby mode`
 		} else if (req.getVote().getNumber() == VoteAction.DECLAREWINNER_VALUE) {
@@ -121,7 +150,17 @@ public class ElectionManager {
 					Management.Builder msg = Management.newBuilder();
 					msg.setElection(le.build());
 					logger.info("Needs election");
-					ManagementQueue.allmgmtChannels.writeAndFlush(msg.build());
+					for (NodeDesc nn : conf.getRoutingList()) {
+						try
+						{ InetSocketAddress isa = new InetSocketAddress( nn.getHost(), nn.getMgmtPort());
+						ChannelFuture cf = ManagementQueue.connect(isa);
+						cf.awaitUninterruptibly(50001);
+						if(cf.isDone()&&cf.isSuccess())
+						cf.channel().writeAndFlush(msg.build()); }
+																
+						catch(Exception e){logger.info("Connection refused!");}
+					}
+					//ManagementQueue.allmgmtChannels.writeAndFlush(msg.build());
 									
 				}
 									
@@ -131,6 +170,7 @@ public class ElectionManager {
 		} else if (req.getVote().getNumber() == VoteAction.ABSTAIN_VALUE) {
 			// for some reason, I decline to vote
 		} else if (req.getVote().getNumber() == VoteAction.NOMINATE_VALUE) {
+			logger.info("Nomination rec!");
 			int comparedToMe = req.getNodeId().compareTo(nodeId);
 			if (comparedToMe == -1) {
 				// Someone else has a higher priority, forward nomination

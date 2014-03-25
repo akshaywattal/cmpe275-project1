@@ -139,7 +139,7 @@ public class ManagementQueue {
 		
 		@Override
 		public void operationComplete(ChannelFuture future) throws Exception {
-			channelf = null;
+				channelf = null;
 		}
 	}
 }
