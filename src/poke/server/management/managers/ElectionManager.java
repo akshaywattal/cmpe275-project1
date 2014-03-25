@@ -22,6 +22,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
@@ -44,11 +45,14 @@ import eye.Comm.LeaderElection.VoteAction;
 public class ElectionManager {
 	protected static Logger logger = LoggerFactory.getLogger("management");
 	protected static AtomicReference<ElectionManager> instance = new AtomicReference<ElectionManager>();
-
+	public AtomicInteger nominations = new AtomicInteger(0);
+	
+	
+	
 	private String nodeId, leaderId;
 	ServerConf conf; 
 	List<String> nodeList;
-	int i, announcements = 0;
+	int i;
 
 	/** @brief the number of votes this server can cast */
 	private int votes = 1;
@@ -104,7 +108,7 @@ public class ElectionManager {
 			{
 				LeaderElection.Builder le = LeaderElection.newBuilder();
 				le.setNodeId(conf.getServer().getProperty("node.id"));
-				le.setBallotId(conf.getServer().getProperty("leader.id"));
+				le.setBallotId(leaderId);
 				//System.out.println(leaderId);
 				le.setVote(VoteAction.NOMINATE);
 				le.setDesc(conf.getServer().getProperty("leader.id"));
@@ -117,10 +121,23 @@ public class ElectionManager {
 					ChannelFuture cf = ManagementQueue.connect(isa);
 					cf.awaitUninterruptibly(50001);
 					if(cf.isDone()&&cf.isSuccess())
-					cf.channel().writeAndFlush(msg.build()); }
+					{
+					cf.channel().writeAndFlush(msg.build());
+					logger.info("Nomination sent by" + nodeId);
+					}
+					}
 															
 					catch(Exception e){logger.info("Election Message refused by " + nn.getHost() + ":" +nn.getMgmtPort());}
 				}
+				
+				while(nominations.get() < conf.getNearest().getNearestNodes().size())
+				{
+					Thread.sleep(5000);
+					logger.info(nodeId + " received " + nominations + " nominations");
+					logger.info(nodeId + " Waiting for nominations...");
+				}
+					if(nominations.get() >= conf.getNearest().getNearestNodes().size()) nominations.set(0); 
+					
 				
 			}
 			
@@ -130,16 +147,16 @@ public class ElectionManager {
 		} else if (req.getVote().getNumber() == VoteAction.DECLAREWINNER_VALUE) {
 			//logger.info("here");
 			// some node declared themself the leader
-			announcements++;
 			String node = req.getBallotId();
 			System.out.println(node);
 			System.out.println(leaderId);
 			
 			if (!node.equals(leaderId))
-				nodeList.add(node);
+			nodeList.add(node);
+			
 			if(nodeList.size()>=2 && nodeList.get(0)==nodeList.get(1)) 
 			leaderId = nodeList.get(0);
-			else
+			else if(nodeList.size()>=2 && nodeList.get(0)!=nodeList.get(1)) 
 				{	
 					
 					LeaderElection.Builder le = LeaderElection.newBuilder();
@@ -156,13 +173,16 @@ public class ElectionManager {
 						ChannelFuture cf = ManagementQueue.connect(isa);
 						cf.awaitUninterruptibly(50001);
 						if(cf.isDone()&&cf.isSuccess())
-						cf.channel().writeAndFlush(msg.build()); }
+						cf.channel().writeAndFlush(msg.build());
+						}
+												
 																
 						catch(Exception e){logger.info("Connection refused!");}
 					}
-					//ManagementQueue.allmgmtChannels.writeAndFlush(msg.build());
+					
 									
 				}
+			
 									
 			
 			
@@ -171,13 +191,18 @@ public class ElectionManager {
 			// for some reason, I decline to vote
 		} else if (req.getVote().getNumber() == VoteAction.NOMINATE_VALUE) {
 			logger.info("Nomination rec!");
-			int comparedToMe = req.getNodeId().compareTo(nodeId);
+			nominations.incrementAndGet();
+			
+			int comparedToMe = req.getBallotId().compareTo(leaderId);
 			if (comparedToMe == -1) {
 				// Someone else has a higher priority, forward nomination
 				// TODO forward
+				leaderId = req.getBallotId();
+				
 			} else if (comparedToMe == 1) {
 				// I have a higher priority, nominate myself
 				// TODO nominate myself
+			
 			}
 		}
 	}

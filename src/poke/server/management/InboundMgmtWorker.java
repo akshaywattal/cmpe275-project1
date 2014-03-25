@@ -15,6 +15,8 @@
  */
 package poke.server.management;
 
+import io.netty.channel.Channel;
+
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
@@ -26,6 +28,7 @@ import poke.server.management.managers.ElectionManager;
 import poke.server.management.managers.HeartbeatManager;
 import poke.server.management.managers.JobManager;
 import poke.server.management.managers.NetworkManager;
+import eye.Comm.LeaderElection;
 import eye.Comm.Management;
 import eye.Comm.Network;
 import eye.Comm.Network.NetworkAction;
@@ -55,6 +58,10 @@ public class InboundMgmtWorker extends Thread {
 
 	int workerId;
 	boolean forever = true;
+	LeaderElection leMessage;
+	Network nMessage;
+	Channel ch;
+	SocketAddress sa;
 
 	public InboundMgmtWorker(ThreadGroup tgrp, int workerId) {
 		super(tgrp, "inbound-mgmt-" + workerId);
@@ -91,10 +98,18 @@ public class InboundMgmtWorker extends Thread {
 					HeartbeatManager.getInstance().processRequest(req.getBeat());
 				} else if (req.hasElection()) {
 					logger.info("Election Message received");
-					ElectionManager.getInstance().processRequest(req.getElection(), msg.channel, msg.sa);
+					leMessage = req.getElection();
+					ch = msg.channel;
+					sa = msg.sa;
+					//ElectionManager.getInstance().processRequest(req.getElection(), msg.channel, msg.sa);
+					new ElectionThread().start();
 				} else if (req.hasGraph()) {
-					logger.info("Network Message received");
-					NetworkManager.getInstance().processRequest(req.getGraph(), msg.channel, msg.sa);
+					nMessage = req.getGraph();
+					ch = msg.channel;
+					sa = msg.sa;
+					//logger.info("Network Message received");
+					//NetworkManager.getInstance().processRequest(req.getGraph(), msg.channel, msg.sa);
+					new NetworkThread().start();
 				} else if (req.hasJobBid()) {
 					logger.info("Job Bid Message received");
 					JobManager.getInstance().processRequest(req.getJobBid());
@@ -116,4 +131,32 @@ public class InboundMgmtWorker extends Thread {
 			logger.info("connection queue closing");
 		}
 	}
+	public class ElectionThread extends Thread{
+		public void run(){
+							logger.info("Election Message received");
+							try {
+								ElectionManager.getInstance().processRequest(leMessage, ch, sa);
+							} catch (NumberFormatException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+}
+	public class NetworkThread extends Thread{
+		public void run(){
+							logger.info("Network Message received");
+							try {
+								NetworkManager.getInstance().processRequest(nMessage, ch, sa);
+							} catch (NumberFormatException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+}
 }
