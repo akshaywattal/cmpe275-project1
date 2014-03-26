@@ -46,9 +46,7 @@ public class ElectionManager {
 	protected static Logger logger = LoggerFactory.getLogger("management");
 	protected static AtomicReference<ElectionManager> instance = new AtomicReference<ElectionManager>();
 	public AtomicInteger nominations = new AtomicInteger(0);
-	
-	
-	
+		
 	private String nodeId, leaderId;
 	private boolean isLeader = false;
 	ServerConf conf; 
@@ -92,6 +90,14 @@ public class ElectionManager {
 		return isLeader;
 	}
 
+	public String getNodeId() {
+		return nodeId;
+	}
+
+	public void setNodeId(String nodeId) {
+		this.nodeId = nodeId;
+	}
+
 	public void setLeader(boolean isLeader) {
 		this.isLeader = isLeader;
 	}
@@ -114,75 +120,46 @@ public class ElectionManager {
 		if (req.getVote().getNumber() == VoteAction.ELECTION_VALUE) {
 			// an election is declared!
 			logger.info("Election Started!");
-			int rounds = Integer.parseInt(conf.getServer().getProperty("diameter"));
-			for(int i=0; i<rounds;i++)
-			{
-				LeaderElection.Builder le = LeaderElection.newBuilder();
-				le.setNodeId(conf.getServer().getProperty("node.id"));
-				le.setBallotId(leaderId);
-				//System.out.println(leaderId);
-				le.setVote(VoteAction.NOMINATE);
-				le.setDesc(conf.getServer().getProperty("leader.id"));
-				Management.Builder msg = Management.newBuilder();
-				msg.setElection(le.build());
-				
-				for (NodeDesc nn : conf.getNearest().getNearestNodes().values()) {
-					try
-					{ InetSocketAddress isa = new InetSocketAddress( nn.getHost(), nn.getMgmtPort());
-					ChannelFuture cf = ManagementQueue.connect(isa);
-					cf.awaitUninterruptibly(50001);
-					if(cf.isDone()&&cf.isSuccess())
-					{
-					cf.channel().writeAndFlush(msg.build());
-					logger.info("Nomination sent by" + nodeId);
-					}
-					cf.channel().closeFuture();
-					}
-															
-					catch(Exception e){logger.info("Election Message refused by " + nn.getHost() + ":" +nn.getMgmtPort());}
-				}
-				
-				while(nominations.get() < conf.getNearest().getNearestNodes().size())
-				{
-					Thread.sleep(5000);
-					logger.info(nodeId + " received " + nominations + " nominations");
-					logger.info(nodeId + " Waiting for nominations...");
-				}
-				if(nominations.get() >= conf.getNearest().getNearestNodes().size()) 
-				{
-				nominations.set(0); 
-				continue;
-				}
-					
-				
-			}
-			
+	
+			nominateSelf();
 			
 			} else if (req.getVote().getNumber() == VoteAction.DECLAREVOID_VALUE) {
 			// no one was elected, I am dropping into standby mode`
 		} else if (req.getVote().getNumber() == VoteAction.DECLAREWINNER_VALUE) {
 	
 			logger.info("Server " +req.getNodeId() + " is the Leader in the network");
-			leaderId = req.getNodeId();						
-					
+			leaderId = req.getNodeId();	
+			if(leaderId.equals(nodeId)) setLeader(true);
+			else setLeader(false);
+			
+			/*for (NodeDesc nn : conf.getNearest().getNearestNodes().values()) {
+				if(nn.getNodeId().equals(leaderId))
+				{
+				HeartbeatData node = new HeartbeatData(nn.getNodeId(), nn.getHost(), nn.getPort(), nn.getMgmtPort());
+				HeartbeatConnector.getInstance().addConnectToThisNode(node);
+				}
+			
+			} 	*/		
 			
 		} else if (req.getVote().getNumber() == VoteAction.ABSTAIN_VALUE) {
 			// for some reason, I decline to vote
 		} else if (req.getVote().getNumber() == VoteAction.NOMINATE_VALUE) {
-			logger.info("Nomination rec!");
-			nominations.incrementAndGet();
+			//logger.info("Nomination rec!");
+			//nominations.incrementAndGet();
 			
-			int comparedToMe = req.getBallotId().compareTo(leaderId);
+			int comparedToMe = req.getNodeId().compareTo(nodeId);
 			if (comparedToMe == -1) {
 				// Someone else has a higher priority, forward nomination
 				// TODO forward
-				leaderId = req.getBallotId();
-				
+				//leaderId = req.getNodeId();
 			} else if (comparedToMe == 1) {
 				// I have a higher priority, nominate myself
 				// TODO nominate myself
+				nominateSelf();
+				
 			
 			}
+			else if(req.getNodeId().equals(nodeId)) declareSelfWinner();
 		}
 	}
 
@@ -192,6 +169,76 @@ public class ElectionManager {
 
 	public void setLeaderId(String leaderId) {
 		this.leaderId = leaderId;
+	}
+	public void nominateSelf() throws InterruptedException
+	{
+		//int rounds = Integer.parseInt(conf.getServer().getProperty("diameter"));
+		//for(int i=0; i<rounds;i++)
+		//{
+			LeaderElection.Builder le = LeaderElection.newBuilder();
+			le.setNodeId(conf.getServer().getProperty("node.id"));
+			le.setBallotId(leaderId);
+			//System.out.println(leaderId);
+			le.setVote(VoteAction.NOMINATE);
+			le.setDesc(conf.getServer().getProperty("leader.id"));
+			Management.Builder msg = Management.newBuilder();
+			msg.setElection(le.build());
+			
+			for (NodeDesc nn : conf.getRoutingList()) {
+				try
+				{ InetSocketAddress isa = new InetSocketAddress( nn.getHost(), nn.getMgmtPort());
+				ChannelFuture cf = ManagementQueue.connect(isa);
+				cf.awaitUninterruptibly(50001);
+				if(cf.isDone()&&cf.isSuccess())
+				{
+				cf.channel().writeAndFlush(msg.build());
+				logger.info("Nomination sent by " + nodeId);
+				}
+				cf.channel().closeFuture();
+				
+				}
+														
+				catch(Exception e){logger.info("Election Message refused by " + nn.getHost() + ":" +nn.getMgmtPort());}
+			}
+				Thread.sleep(10000);
+				if(leaderId==nodeId) declareSelfWinner();
+							
+		}
+	//}
+	
+	public void declareSelfWinner()
+	{
+		setLeader(true);
+		//int rounds = Integer.parseInt(conf.getServer().getProperty("diameter"));
+		//for(int i=0; i<rounds;i++)
+		//	{
+			LeaderElection.Builder le = LeaderElection.newBuilder();
+			le.setNodeId(conf.getServer().getProperty("node.id"));
+			le.setBallotId(leaderId);
+			//System.out.println(leaderId);
+			le.setVote(VoteAction.DECLAREWINNER);
+			le.setDesc(conf.getServer().getProperty("leader.id"));
+			Management.Builder msg = Management.newBuilder();
+			msg.setElection(le.build());
+			
+			for (NodeDesc nn : conf.getRoutingList()) {
+				try
+				{ InetSocketAddress isa = new InetSocketAddress( nn.getHost(), nn.getMgmtPort());
+				ChannelFuture cf = ManagementQueue.connect(isa);
+				cf.awaitUninterruptibly(50001);
+				if(cf.isDone()&&cf.isSuccess())
+				{
+				cf.channel().writeAndFlush(msg.build());
+				logger.info("Winner sent by " + nodeId);
+				}
+				cf.channel().closeFuture();
+				}
+														
+				catch(Exception e){logger.info("Election Message refused by " + nn.getHost() + ":" +nn.getMgmtPort());}
+			}
+			
+									
+		// }
 	}
 	
 	}

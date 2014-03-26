@@ -19,6 +19,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -26,6 +27,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import poke.server.conf.NodeDesc;
 import poke.server.conf.ServerConf;
 import poke.server.conf.ServerConf.NearestConf;
 import poke.server.management.ManagementQueue;
@@ -36,7 +38,9 @@ import com.google.protobuf.GeneratedMessage;
 import eye.Comm.Heartbeat;
 import eye.Comm.LeaderElection;
 import eye.Comm.Management;
+import eye.Comm.Network;
 import eye.Comm.LeaderElection.VoteAction;
+import eye.Comm.Network.NetworkAction;
 
 /**
  * A server can contain multiple, separate interfaces that represent different
@@ -275,10 +279,10 @@ public class HeartbeatManager extends Thread {
 	{
 	LeaderElection.Builder le = LeaderElection.newBuilder();
 	le.setNodeId(conf.getServer().getProperty("node.id"));
-	le.setBallotId(conf.getServer().getProperty("leader.id"));
+	le.setBallotId(conf.getServer().getProperty("node.id"));
 	//System.out.println(leaderId);
 	le.setVote(VoteAction.DECLAREWINNER);
-	le.setDesc(conf.getServer().getProperty("leader.id"));
+	le.setDesc(conf.getServer().getProperty("node.id"));
 	Management.Builder msg = Management.newBuilder();
 	msg.setElection(le.build());
 	return msg.build();
@@ -296,9 +300,36 @@ public class HeartbeatManager extends Thread {
 			if (outgoingHB.containsValue(heart)) {
 				logger.warn("HB outgoing channel closing for node '" + heart.getNodeId() + "' at " + heart.getHost());
 				outgoingHB.remove(future.channel());
+				
+				ElectionManager.getInstance().setLeaderId("unknown");
+				Network.Builder n = Network.newBuilder();
+				n.setAction(NetworkAction.ANNOUNCE);
+				n.setNodeId(conf.getServer().getProperty("node.id"));
+				Management.Builder msg = Management.newBuilder();
+				msg.setGraph(n.build());
+				
+				for (NodeDesc nn : conf.getRoutingList()) {
+					try
+					{ InetSocketAddress isa = new InetSocketAddress( nn.getHost(), nn.getMgmtPort());
+					ManagementQueue.nodeMap.put(nn.getNodeId(), isa);
+					ChannelFuture cf = ManagementQueue.connect(isa);
+					cf.awaitUninterruptibly(50001);
+					if(cf.isDone()&&cf.isSuccess())
+					cf.channel().writeAndFlush(msg.build());
+					}
+
+					catch(Exception e){logger.info("Connection refused!");}
+					}
+				
+					Thread.sleep(10000);
+					if(ElectionManager.getInstance().getLeaderId().equals("unknown"))
+					ElectionManager.getInstance().nominateSelf();
+					
 			} else if (incomingHB.containsValue(heart)) {
 				logger.warn("HB incoming channel closing for node '" + heart.getNodeId() + "' at " + heart.getHost());
 				incomingHB.remove(future.channel());
+
+
 			}
 		}
 	}

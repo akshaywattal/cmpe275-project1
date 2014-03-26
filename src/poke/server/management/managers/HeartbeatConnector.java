@@ -15,14 +15,21 @@
  */
 package poke.server.management.managers;
 
+import io.netty.channel.ChannelFuture;
+
+import java.net.InetSocketAddress;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import eye.Comm.LeaderElection;
+import eye.Comm.Management;
+import eye.Comm.LeaderElection.VoteAction;
 import poke.monitor.HeartMonitor;
 import poke.monitor.MonitorHandler;
+import poke.server.management.ManagementQueue;
 import poke.server.management.managers.HeartbeatData.BeatStatus;
 
 /**

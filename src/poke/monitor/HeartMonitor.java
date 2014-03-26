@@ -222,6 +222,10 @@ public class HeartMonitor {
 	public int getPort() {
 		return port;
 	}
+	
+	public String getNodeId() {
+		return whoami;
+	}
 
 	/**
 	 * for demo application only - this will enter a loop waiting for
