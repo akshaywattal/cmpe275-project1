@@ -127,7 +127,8 @@ public class ElectionManager {
 	
 			logger.info("Server " +req.getBallotId() + "  was declared as the Leader in the network");
 			
-			if(Integer.parseInt(leaderId)>= Integer.parseInt(req.getBallotId()))	leaderId = req.getBallotId();	
+			//if(Integer.parseInt(leaderId)>= Integer.parseInt(req.getBallotId()))	
+			leaderId = req.getBallotId();	
 			if(leaderId.equals(nodeId)) setLeader(true);
 			else setLeader(false);
 			
