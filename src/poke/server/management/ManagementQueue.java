@@ -31,6 +31,8 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.HashMap;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import org.slf4j.Logger;
@@ -56,7 +58,7 @@ public class ManagementQueue {
 	private static ChannelFuture channelf;
 	static EventLoopGroup group;
 	
-	public static HashMap<String, InetSocketAddress> nodeMap;
+	public static SortedMap<String, InetSocketAddress> nodeMap;
 	public static HashMap<InetSocketAddress, ChannelFuture> channelMap;
 	public static ChannelGroup allmgmtChannels;
 
@@ -73,7 +75,7 @@ public class ManagementQueue {
 		oworker = new OutboundMgmtWorker(tgroup, 1);
 		oworker.start();
 		group = new NioEventLoopGroup();
-		nodeMap = new HashMap<String, InetSocketAddress>();
+		nodeMap = new TreeMap<String, InetSocketAddress>();
 		allmgmtChannels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 	}
 

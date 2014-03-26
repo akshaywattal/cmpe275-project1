@@ -30,13 +30,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import eye.Comm.LeaderElection;
 import eye.Comm.Management;
 import eye.Comm.Network;
+import eye.Comm.LeaderElection.VoteAction;
 import eye.Comm.Network.NetworkAction;
 import poke.server.conf.JsonUtil;
 import poke.server.conf.NodeDesc;
@@ -69,6 +73,8 @@ public class Server {
 	protected static ChannelGroup allChannels;
 	public static HashMap<Integer, ServerBootstrap> bootstrap = new HashMap<Integer, ServerBootstrap>();
 	public static HashMap<Integer, ServerBootstrap> nodeMapping = new HashMap<Integer, ServerBootstrap>();
+	public SortedMap<String, String> aliveNodes;
+	
 	protected ServerConf conf;
 
 	protected JobManager jobMgr;
@@ -100,6 +106,7 @@ public class Server {
 	 */
 	public Server(File cfg) {
 		init(cfg);
+		this.aliveNodes = new  TreeMap<String, String>();
 	}
 
 	private void init(File cfg) {
@@ -321,12 +328,12 @@ public class Server {
 		Thread cthread = new Thread(comm);
 		cthread.start();
 		
-		
+		/*
 		Network.Builder n = Network.newBuilder();
 		n.setAction(NetworkAction.ANNOUNCE);
 		n.setNodeId(conf.getServer().getProperty("node.id"));
 		Management.Builder msg = Management.newBuilder();
-		msg.setGraph(n.build());
+		msg.setGraph(n.build()); */
 		
 		for (NodeDesc nn : conf.getRoutingList()) {
 			try
@@ -335,11 +342,38 @@ public class Server {
 			ChannelFuture cf = ManagementQueue.connect(isa);
 			cf.awaitUninterruptibly(50001);
 			if(cf.isDone()&&cf.isSuccess())
-			cf.channel().writeAndFlush(msg.build());
+			//cf.channel().writeAndFlush(msg.build());
+			aliveNodes.put(nn.getNodeId(), nn.getNodeId());
+			cf.channel().closeFuture();
 			}
 
 			catch(Exception e){logger.info("Connection refused!");}
 			}
+		
+		LeaderElection.Builder le = LeaderElection.newBuilder();
+		le.setNodeId(conf.getServer().getProperty("node.id"));
+		le.setBallotId(aliveNodes.firstKey());
+		System.out.println("Server " + aliveNodes.firstKey() + " shall be the leader");
+		le.setVote(VoteAction.DECLAREWINNER);
+		le.setDesc(aliveNodes.firstKey());
+		Management.Builder msg = Management.newBuilder();
+		msg.setElection(le.build());
+		
+		for (NodeDesc nn : conf.getRoutingList()) {
+			try
+			{ InetSocketAddress isa = new InetSocketAddress( nn.getHost(), nn.getMgmtPort());
+			ChannelFuture cf = ManagementQueue.connect(isa);
+			cf.awaitUninterruptibly(50001);
+			if(cf.isDone()&&cf.isSuccess())
+			{
+			cf.channel().writeAndFlush(msg.build());
+			//logger.info("Winner sent by " + nodeId);
+			}
+			cf.channel().closeFuture();
+			}
+													
+			catch(Exception e){logger.info("Election Message refused by " + nn.getHost() + ":" +nn.getMgmtPort());}
+		}
 	}
 
 	/**

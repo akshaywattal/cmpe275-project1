@@ -301,7 +301,8 @@ public class HeartbeatManager extends Thread {
 				logger.warn("HB outgoing channel closing for node '" + heart.getNodeId() + "' at " + heart.getHost());
 				outgoingHB.remove(future.channel());
 				
-				ElectionManager.getInstance().setLeaderId("unknown");
+				String diameter =conf.getServer().getProperty("diameter");
+				ElectionManager.getInstance().setLeaderId(diameter);
 				Network.Builder n = Network.newBuilder();
 				n.setAction(NetworkAction.ANNOUNCE);
 				n.setNodeId(conf.getServer().getProperty("node.id"));
@@ -322,8 +323,11 @@ public class HeartbeatManager extends Thread {
 					}
 				
 					Thread.sleep(10000);
-					if(ElectionManager.getInstance().getLeaderId().equals("unknown"))
-					ElectionManager.getInstance().nominateSelf();
+					if(Integer.parseInt(ElectionManager.getInstance().getLeaderId())>Integer.parseInt(nodeId))
+						ElectionManager.getInstance().nominateSelf();
+					
+				
+						
 					
 			} else if (incomingHB.containsValue(heart)) {
 				logger.warn("HB incoming channel closing for node '" + heart.getNodeId() + "' at " + heart.getHost());

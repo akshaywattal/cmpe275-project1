@@ -80,9 +80,7 @@ public class ElectionManager {
 			this.votes = votes;
 				
 		this.leaderId = conf.getServer().getProperty("leader.id");
-		if(leaderId.equals("1")) setLeader(true);
-		else setLeader(false);
-		
+			
 		this.nodeList = new ArrayList<String>();
 	}
 
@@ -127,8 +125,9 @@ public class ElectionManager {
 			// no one was elected, I am dropping into standby mode`
 		} else if (req.getVote().getNumber() == VoteAction.DECLAREWINNER_VALUE) {
 	
-			logger.info("Server " +req.getNodeId() + " is the Leader in the network");
-			leaderId = req.getNodeId();	
+			logger.info("Server " +req.getBallotId() + "  was declared as the Leader in the network");
+			
+			if(Integer.parseInt(leaderId)>= Integer.parseInt(req.getBallotId()))	leaderId = req.getBallotId();	
 			if(leaderId.equals(nodeId)) setLeader(true);
 			else setLeader(false);
 			
@@ -147,11 +146,11 @@ public class ElectionManager {
 			//logger.info("Nomination rec!");
 			//nominations.incrementAndGet();
 			
-			int comparedToMe = req.getNodeId().compareTo(nodeId);
+			int comparedToMe = req.getBallotId().compareTo(nodeId);
 			if (comparedToMe == -1) {
 				// Someone else has a higher priority, forward nomination
 				// TODO forward
-				//leaderId = req.getNodeId();
+				leaderId = req.getBallotId();
 			} else if (comparedToMe == 1) {
 				// I have a higher priority, nominate myself
 				// TODO nominate myself
@@ -159,7 +158,7 @@ public class ElectionManager {
 				
 			
 			}
-			else if(req.getNodeId().equals(nodeId)) declareSelfWinner();
+			else if(req.getBallotId().equals(nodeId)) declareSelfWinner();
 		}
 	}
 
@@ -176,11 +175,11 @@ public class ElectionManager {
 		//for(int i=0; i<rounds;i++)
 		//{
 			LeaderElection.Builder le = LeaderElection.newBuilder();
-			le.setNodeId(conf.getServer().getProperty("node.id"));
-			le.setBallotId(leaderId);
+			le.setNodeId(nodeId);
+			le.setBallotId(nodeId);
 			//System.out.println(leaderId);
 			le.setVote(VoteAction.NOMINATE);
-			le.setDesc(conf.getServer().getProperty("leader.id"));
+			le.setDesc(nodeId);
 			Management.Builder msg = Management.newBuilder();
 			msg.setElection(le.build());
 			
@@ -201,7 +200,11 @@ public class ElectionManager {
 				catch(Exception e){logger.info("Election Message refused by " + nn.getHost() + ":" +nn.getMgmtPort());}
 			}
 				Thread.sleep(10000);
-				if(leaderId==nodeId) declareSelfWinner();
+				//if(leaderId==nodeId) declareSelfWinner();
+				if(Integer.parseInt(getLeaderId())>Integer.parseInt(nodeId))
+					nominateSelf();
+					else if(Integer.parseInt(getLeaderId())==Integer.parseInt(nodeId))
+							declareSelfWinner();
 							
 		}
 	//}
@@ -213,11 +216,11 @@ public class ElectionManager {
 		//for(int i=0; i<rounds;i++)
 		//	{
 			LeaderElection.Builder le = LeaderElection.newBuilder();
-			le.setNodeId(conf.getServer().getProperty("node.id"));
-			le.setBallotId(leaderId);
+			le.setNodeId(nodeId);
+			le.setBallotId(nodeId);
 			//System.out.println(leaderId);
 			le.setVote(VoteAction.DECLAREWINNER);
-			le.setDesc(conf.getServer().getProperty("leader.id"));
+			le.setDesc(nodeId);
 			Management.Builder msg = Management.newBuilder();
 			msg.setElection(le.build());
 			
