@@ -136,36 +136,18 @@ public class NetworkManager {
 			// node removing itself from the network (gracefully)
 		} else if (req.getAction().getNumber() == NetworkAction.ANNOUNCE_VALUE) {
 			// nodes sending their info in response to a create map
-			//logger.info("Needs election");
+			logger.info("Checking whether " + nodeId + " is the leader");
 			
-			announcements++;
-			int node = Integer.parseInt(req.getNodeId());
-			System.out.print(node);
-			//System.out.print(conf.getServer().getProperty("leader.id"));
-			if (node != Integer.parseInt(conf.getServer().getProperty("leader.id")))
-				nodeList.add(node);
-			if(nodeList.size()>0 && announcements==2) 
+			if(ElectionManager.getInstance().isLeader())
+				
 			{
-				boolean checkValueIsSame;
-				if(nodeList.get(0)==nodeList.get(1)) checkValueIsSame = true;
-				else checkValueIsSame = false;
-				if(!checkValueIsSame) 
-					{
-					
-					LeaderElection.Builder le = LeaderElection.newBuilder();
-					le.setVote(VoteAction.ELECTION);
-					LeaderElection lereq = le.build();
-					Management.Builder m = Management.newBuilder();
-					m.setElection(lereq);
-					
-					announcements = 0; 
-					logger.info("Needs election");
-					//ManagementQueue.enqueueRequest(m.build(), channel, channel.remoteAddress());
-							
-					//ElectionManager.getInstance().processRequest(lereq);
-					}
-					
+				logger.info("Confirmed " + nodeId + " is the leader");
+				Management reply = sendLeader();
+				InetSocketAddress isa = ManagementQueue.nodeMap.get(req.getNodeId());
+				ManagementQueue.enqueueResponse(reply, channel, isa);
+				
 			}
+
 						
 		} else if (req.getAction().getNumber() == NetworkAction.CREATEMAP_VALUE) {
 			// request to create a network topology map
@@ -182,10 +164,10 @@ public class NetworkManager {
 	//n.setAction(NetworkAction.ANNOUNCE);
 	LeaderElection.Builder le = LeaderElection.newBuilder();
 	le.setNodeId(nodeId);
-	le.setBallotId(leaderId);
+	le.setBallotId(nodeId);
 	//System.out.println(leaderId);
 	le.setVote(VoteAction.DECLAREWINNER);
-	le.setDesc(leaderId);
+	le.setDesc(nodeId);
 	//n.setNodeId(conf.getServer().getProperty("leader.id"));
 	Management.Builder msg = Management.newBuilder();
 	//msg.setGraph(n.build());

@@ -60,8 +60,7 @@ public class HeartbeatManager extends Thread {
 	ManagementQueue mqueue;
 	boolean forever = true;
 	ServerConf conf;
-	boolean start = true;
-
+	
 	ConcurrentHashMap<Channel, HeartbeatData> outgoingHB = new ConcurrentHashMap<Channel, HeartbeatData>();
 	ConcurrentHashMap<String, HeartbeatData> incomingHB = new ConcurrentHashMap<String, HeartbeatData>();
 
@@ -246,11 +245,6 @@ public class HeartbeatManager extends Thread {
 							hd.channel.writeAndFlush(msg);
 							hd.setLastBeatSent(System.currentTimeMillis());
 							hd.setFailuresOnSend(0);
-							if (start) 
-								{
-								msg = sendLeader();
-								hd.channel.writeAndFlush(msg);
-								}
 							if (logger.isDebugEnabled())
 								logger.debug("beat (" + nodeId + ") sent to " + hd.getNodeId() + " at " + hd.getHost());
 						} catch (Exception e) {
@@ -259,7 +253,7 @@ public class HeartbeatManager extends Thread {
 									+ " at " + hd.getHost(), e);
 						}
 					}
-					start = false;
+					
 				} else
 					; // logger.info("No nodes to send HB");
 			} catch (InterruptedException ie) {

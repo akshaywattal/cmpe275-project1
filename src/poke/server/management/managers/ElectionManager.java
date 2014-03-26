@@ -50,6 +50,7 @@ public class ElectionManager {
 	
 	
 	private String nodeId, leaderId;
+	private boolean isLeader = false;
 	ServerConf conf; 
 	List<String> nodeList;
 	int i;
@@ -81,8 +82,18 @@ public class ElectionManager {
 			this.votes = votes;
 				
 		this.leaderId = conf.getServer().getProperty("leader.id");
+		if(leaderId.equals("1")) setLeader(true);
+		else setLeader(false);
 		
 		this.nodeList = new ArrayList<String>();
+	}
+
+	public boolean isLeader() {
+		return isLeader;
+	}
+
+	public void setLeader(boolean isLeader) {
+		this.isLeader = isLeader;
 	}
 
 	/**
@@ -125,6 +136,7 @@ public class ElectionManager {
 					cf.channel().writeAndFlush(msg.build());
 					logger.info("Nomination sent by" + nodeId);
 					}
+					cf.channel().closeFuture();
 					}
 															
 					catch(Exception e){logger.info("Election Message refused by " + nn.getHost() + ":" +nn.getMgmtPort());}
@@ -136,7 +148,11 @@ public class ElectionManager {
 					logger.info(nodeId + " received " + nominations + " nominations");
 					logger.info(nodeId + " Waiting for nominations...");
 				}
-					if(nominations.get() >= conf.getNearest().getNearestNodes().size()) nominations.set(0); 
+				if(nominations.get() >= conf.getNearest().getNearestNodes().size()) 
+				{
+				nominations.set(0); 
+				continue;
+				}
 					
 				
 			}
@@ -145,61 +161,10 @@ public class ElectionManager {
 			} else if (req.getVote().getNumber() == VoteAction.DECLAREVOID_VALUE) {
 			// no one was elected, I am dropping into standby mode`
 		} else if (req.getVote().getNumber() == VoteAction.DECLAREWINNER_VALUE) {
-			//logger.info("here");
-			// some node declared themself the leader
-			String node = req.getBallotId();
-			/*System.out.println(node);
-			System.out.println(leaderId);*/
-			
-			//Adding both to List
-			nodeList.add(node);
-			nodeList.add(leaderId);
-			
-			System.out.println("Leader ID received from Peer:" +  nodeList.get(0));
-			System.out.println("Leader ID in Conf File:" +  nodeList.get(1));
-			
-			/*if (!node.equals(leaderId))
-			nodeList.add(node);*/
-			
-			//Checking if its end node and matching Leader ID with Received Leader ID
-			if(nodeList.size()==2 && nodeList.get(0).equals(nodeList.get(1)) && conf.getNearest().getNearestNodes().size()==1) 
-			leaderId = nodeList.get(0);
-			
-			//Checking if its middle node and matching Leader ID with Received Leader ID
-			else if(nodeList.size()==4 && nodeList.get(0).equals(nodeList.get(1)) && nodeList.get(2).equals(nodeList.get(1)) && conf.getNearest().getNearestNodes().size()==2) 
-			leaderId = nodeList.get(0);
-			
-			//Changed = to equals
-			else if(nodeList.size()>=2 && !nodeList.get(0).equals(nodeList.get(1))) 
-				{	
+	
+			logger.info("Server " +req.getNodeId() + " is the Leader in the network");
+			leaderId = req.getNodeId();						
 					
-					LeaderElection.Builder le = LeaderElection.newBuilder();
-					le.setNodeId(conf.getServer().getProperty("node.id"));
-					le.setBallotId(conf.getServer().getProperty("leader.id"));
-					le.setVote(VoteAction.ELECTION);
-					le.setDesc(conf.getServer().getProperty("leader.id"));
-					Management.Builder msg = Management.newBuilder();
-					msg.setElection(le.build());
-					logger.info("Needs election");
-					for (NodeDesc nn : conf.getRoutingList()) {
-						try
-						{ InetSocketAddress isa = new InetSocketAddress( nn.getHost(), nn.getMgmtPort());
-						ChannelFuture cf = ManagementQueue.connect(isa);
-						cf.awaitUninterruptibly(50001);
-						if(cf.isDone()&&cf.isSuccess())
-						cf.channel().writeAndFlush(msg.build());
-						}
-												
-																
-						catch(Exception e){logger.info("Connection refused!");}
-					}
-					
-									
-				}
-			
-									
-			
-			
 			
 		} else if (req.getVote().getNumber() == VoteAction.ABSTAIN_VALUE) {
 			// for some reason, I decline to vote
@@ -220,4 +185,13 @@ public class ElectionManager {
 			}
 		}
 	}
-}
+
+	public String getLeaderId() {
+		return leaderId;
+	}
+
+	public void setLeaderId(String leaderId) {
+		this.leaderId = leaderId;
+	}
+	
+	}

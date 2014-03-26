@@ -35,6 +35,9 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import eye.Comm.Management;
+import eye.Comm.Network;
+import eye.Comm.Network.NetworkAction;
 import poke.server.conf.JsonUtil;
 import poke.server.conf.NodeDesc;
 import poke.server.conf.ServerConf;
@@ -261,11 +264,7 @@ public class Server {
 
 		// create manager for network changes
 		networkMgr = NetworkManager.getInstance(myId,conf);
-		for (NodeDesc nn : conf.getNearest().getNearestNodes().values()) {
-			InetSocketAddress isa = new InetSocketAddress(nn.getHost(), nn.getMgmtPort());
-			ManagementQueue.nodeMap.put(nn.getNodeId(), isa);
-			System.out.println("Port Added :" + ManagementQueue.nodeMap.get(nn.getNodeId()).getPort() + " in Key " + nn.getNodeId());
-			}
+		
 
 		// create manager for leader election
 		String str = conf.getServer().getProperty("node.votes");
@@ -317,9 +316,30 @@ public class Server {
 
 		StartCommunication comm = new StartCommunication(conf);
 		logger.info("Server " + myId + " ready");
+		logger.info("Server " + myId + " announced he is ALIVE");
 		
 		Thread cthread = new Thread(comm);
 		cthread.start();
+		
+		
+		Network.Builder n = Network.newBuilder();
+		n.setAction(NetworkAction.ANNOUNCE);
+		n.setNodeId(conf.getServer().getProperty("node.id"));
+		Management.Builder msg = Management.newBuilder();
+		msg.setGraph(n.build());
+		
+		for (NodeDesc nn : conf.getRoutingList()) {
+			try
+			{ InetSocketAddress isa = new InetSocketAddress( nn.getHost(), nn.getMgmtPort());
+			ManagementQueue.nodeMap.put(nn.getNodeId(), isa);
+			ChannelFuture cf = ManagementQueue.connect(isa);
+			cf.awaitUninterruptibly(50001);
+			if(cf.isDone()&&cf.isSuccess())
+			cf.channel().writeAndFlush(msg.build());
+			}
+
+			catch(Exception e){logger.info("Connection refused!");}
+			}
 	}
 
 	/**
