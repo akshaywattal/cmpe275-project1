@@ -148,15 +148,29 @@ public class ElectionManager {
 			//logger.info("here");
 			// some node declared themself the leader
 			String node = req.getBallotId();
-			System.out.println(node);
-			System.out.println(leaderId);
+			/*System.out.println(node);
+			System.out.println(leaderId);*/
 			
-			if (!node.equals(leaderId))
+			//Adding both to List
 			nodeList.add(node);
+			nodeList.add(leaderId);
 			
-			if(nodeList.size()>=2 && nodeList.get(0)==nodeList.get(1)) 
+			System.out.println("Leader ID received from Peer:" +  nodeList.get(0));
+			System.out.println("Leader ID in Conf File:" +  nodeList.get(1));
+			
+			/*if (!node.equals(leaderId))
+			nodeList.add(node);*/
+			
+			//Checking if its end node and matching Leader ID with Received Leader ID
+			if(nodeList.size()==2 && nodeList.get(0).equals(nodeList.get(1)) && conf.getNearest().getNearestNodes().size()==1) 
 			leaderId = nodeList.get(0);
-			else if(nodeList.size()>=2 && nodeList.get(0)!=nodeList.get(1)) 
+			
+			//Checking if its middle node and matching Leader ID with Received Leader ID
+			else if(nodeList.size()==4 && nodeList.get(0).equals(nodeList.get(1)) && nodeList.get(2).equals(nodeList.get(1)) && conf.getNearest().getNearestNodes().size()==2) 
+			leaderId = nodeList.get(0);
+			
+			//Changed = to equals
+			else if(nodeList.size()>=2 && !nodeList.get(0).equals(nodeList.get(1))) 
 				{	
 					
 					LeaderElection.Builder le = LeaderElection.newBuilder();
