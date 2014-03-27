@@ -22,6 +22,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -35,6 +36,7 @@ import eye.Comm.LeaderElection;
 import eye.Comm.Management;
 import eye.Comm.Network;
 import eye.Comm.LeaderElection.VoteAction;
+import eye.Comm.Network.NetworkAction;
 
 /**
  * The election manager is used to determine leadership within the network.
@@ -46,6 +48,7 @@ public class ElectionManager {
 	protected static Logger logger = LoggerFactory.getLogger("management");
 	protected static AtomicReference<ElectionManager> instance = new AtomicReference<ElectionManager>();
 	public AtomicInteger nominations = new AtomicInteger(0);
+	public List<InetSocketAddress> addressList = new CopyOnWriteArrayList<InetSocketAddress>();
 		
 	private String nodeId, leaderId;
 	private boolean isLeader = false;
@@ -170,6 +173,8 @@ public class ElectionManager {
 	public void setLeaderId(String leaderId) {
 		this.leaderId = leaderId;
 	}
+	
+	/*
 	public void nominateSelf() throws InterruptedException
 	{
 		//int rounds = Integer.parseInt(conf.getServer().getProperty("diameter"));
@@ -209,6 +214,9 @@ public class ElectionManager {
 							
 		}
 	//}
+	 * 
+	 * 
+	 */
 	
 	public void declareSelfWinner()
 	{
@@ -243,6 +251,61 @@ public class ElectionManager {
 			
 									
 		// }
+			
+					
+	}
+	
+	public void nominateSelf() throws InterruptedException{
+		
+		LeaderElection.Builder le = LeaderElection.newBuilder();
+		le.setNodeId(nodeId);
+		le.setBallotId(nodeId);
+		//System.out.println(leaderId);
+		le.setVote(VoteAction.NOMINATE);
+		le.setDesc(nodeId);
+		Management.Builder msg = Management.newBuilder();
+		msg.setElection(le.build());
+		addressList.clear();
+		
+		
+		for (NodeDesc nn : conf.getRoutingList()) {
+			InetSocketAddress isa = new InetSocketAddress( nn.getHost(), nn.getMgmtPort());
+			if((Integer.parseInt(nn.getNodeId())<Integer.parseInt(nodeId)))
+			addressList.add(isa);
+			}
+
+			if(addressList.size()>0)
+			{
+			for(InetSocketAddress isa : addressList)	{
+				try
+				{ 
+				ChannelFuture cf = ManagementQueue.connect(isa);
+				cf.awaitUninterruptibly(50001);
+				if(cf.isDone()&&cf.isSuccess())
+				{
+				cf.channel().writeAndFlush(msg.build());
+				logger.info("Nomination sent by " + nodeId);
+				}
+				cf.channel().closeFuture();
+				}
+														
+				catch(Exception e){
+					
+					logger.info("Election Message refused by " + isa.getHostName() + ":" +isa.getPort()); 
+					addressList.remove(isa); 
+					if(addressList.size()>0) continue;
+					else declareSelfWinner();
+						}
+			}
+			
+			Thread.sleep(10000);
+			if(Integer.parseInt(getLeaderId())>Integer.parseInt(nodeId))
+				nominateSelf();
+				
+			}	
+			else declareSelfWinner();
+				
+			
 	}
 	
 	}

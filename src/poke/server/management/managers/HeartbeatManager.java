@@ -300,32 +300,8 @@ public class HeartbeatManager extends Thread {
 			if (outgoingHB.containsValue(heart)) {
 				logger.warn("HB outgoing channel closing for node '" + heart.getNodeId() + "' at " + heart.getHost());
 				outgoingHB.remove(future.channel());
-				
-				String diameter =conf.getServer().getProperty("diameter");
-				ElectionManager.getInstance().setLeaderId(diameter);
-				Network.Builder n = Network.newBuilder();
-				n.setAction(NetworkAction.ANNOUNCE);
-				n.setNodeId(conf.getServer().getProperty("node.id"));
-				Management.Builder msg = Management.newBuilder();
-				msg.setGraph(n.build());
-				
-				for (NodeDesc nn : conf.getRoutingList()) {
-					try
-					{ InetSocketAddress isa = new InetSocketAddress( nn.getHost(), nn.getMgmtPort());
-					ManagementQueue.nodeMap.put(nn.getNodeId(), isa);
-					ChannelFuture cf = ManagementQueue.connect(isa);
-					cf.awaitUninterruptibly(50001);
-					if(cf.isDone()&&cf.isSuccess())
-					cf.channel().writeAndFlush(msg.build());
-					}
-
-					catch(Exception e){logger.info("Connection refused!");}
-					}
-				
-					Thread.sleep(10000);
-					if(Integer.parseInt(ElectionManager.getInstance().getLeaderId())>Integer.parseInt(nodeId))
-						ElectionManager.getInstance().nominateSelf();
-					
+				ElectionManager.getInstance().setLeaderId(conf.getServer().getProperty("diameter"));
+				ElectionManager.getInstance().nominateSelf();				
 				
 						
 					

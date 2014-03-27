@@ -334,6 +334,7 @@ public class Server {
 		n.setNodeId(conf.getServer().getProperty("node.id"));
 		Management.Builder msg = Management.newBuilder();
 		msg.setGraph(n.build()); */
+		ManagementQueue.nodeMap.clear();
 		
 		for (NodeDesc nn : conf.getRoutingList()) {
 			try
@@ -358,6 +359,8 @@ public class Server {
 		le.setDesc(aliveNodes.firstKey());
 		Management.Builder msg = Management.newBuilder();
 		msg.setElection(le.build());
+		
+		
 		
 		for (NodeDesc nn : conf.getRoutingList()) {
 			try
