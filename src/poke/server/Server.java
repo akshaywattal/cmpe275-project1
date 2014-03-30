@@ -17,7 +17,6 @@ package poke.server;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.group.ChannelGroup;
@@ -28,7 +27,9 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -37,11 +38,10 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import eye.Comm.LeaderElection;
-import eye.Comm.Management;
-import eye.Comm.Network;
-import eye.Comm.LeaderElection.VoteAction;
-import eye.Comm.Network.NetworkAction;
+import com.mongodb.DBCollection;
+import com.mongodb.MongoClient;
+import com.mongodb.ServerAddress;
+
 import poke.server.conf.JsonUtil;
 import poke.server.conf.NodeDesc;
 import poke.server.conf.ServerConf;
@@ -54,6 +54,9 @@ import poke.server.management.managers.HeartbeatManager;
 import poke.server.management.managers.JobManager;
 import poke.server.management.managers.NetworkManager;
 import poke.server.resources.ResourceFactory;
+import eye.Comm.LeaderElection;
+import eye.Comm.LeaderElection.VoteAction;
+import eye.Comm.Management;
 
 /**
  * Note high surges of messages can close down the channel if the handler cannot
@@ -81,7 +84,7 @@ public class Server {
 	protected NetworkManager networkMgr;
 	protected HeartbeatManager heartbeatMgr;
 	protected ElectionManager electionMgr;
-
+	
 	/**
 	 * static because we need to get a handle to the factory from the shutdown
 	 * resource
@@ -92,6 +95,8 @@ public class Server {
 				ChannelGroupFuture grp = allChannels.close();
 				grp.awaitUninterruptibly(5, TimeUnit.SECONDS);
 			}
+			
+			
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -301,9 +306,10 @@ public class Server {
 	}
 
 	/**
+	 * @throws UnknownHostException 
 	 * 
 	 */
-	public void run() {
+	public void run() throws UnknownHostException {
 		if (conf == null) {
 			logger.error("Missing configuration file");
 			return;
@@ -314,7 +320,9 @@ public class Server {
 
 		// storage initialization
 		// TODO storage setup (e.g., connection to a database)
-
+		 	//server = new MongoServer(new MemoryBackend());
+		 	//server.main(args);
+		
 		startManagers();
 		
 		StartManagement mgt = new StartManagement(conf);
@@ -381,8 +389,9 @@ public class Server {
 
 	/**
 	 * @param args
+	 * @throws UnknownHostException 
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws UnknownHostException {
 		if (args.length != 1) {
 			System.err.println("Usage: java " + Server.class.getClass().getName() + " conf-file");
 			System.exit(1);

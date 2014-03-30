@@ -77,6 +77,8 @@ message NameSpaceOperation {
    required SpaceAction action = 1;
    optional int64 ns_id = 2 [default = -1]; 
    optional NameSpace data = 3;
+   optional User u_id = 5;
+   optional Course c_id = 6;
 
    // additional options for operation
    optional NameValueSet options = 4;
@@ -88,6 +90,24 @@ message NameSpaceOperation {
       LISTSPACES = 4;
    }
 }
+
+message User {
+	required string user_id = 1;
+	optional string user_name = 2;
+	optional string password = 3;
+	optional string city = 4;
+	optional string zipcode = 5;
+
+}
+
+message Course {
+	required string course_id = 1;
+	optional string course_name = 2;
+	optional string course_description = 3;
+	optional string add_code = 4;
+	
+}
+
 
 // response - reply from a space operation
 message NameSpaceStatus {

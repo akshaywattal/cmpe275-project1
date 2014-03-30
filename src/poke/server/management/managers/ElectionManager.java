@@ -134,15 +134,15 @@ public class ElectionManager {
 			leaderId = req.getBallotId();	
 			if(leaderId.equals(nodeId)) setLeader(true);
 			else setLeader(false);
-			
-			/*for (NodeDesc nn : conf.getNearest().getNearestNodes().values()) {
+				/*
+				for (NodeDesc nn : conf.getNearest().getNearestNodes().values()) {
 				if(nn.getNodeId().equals(leaderId))
 				{
 				HeartbeatData node = new HeartbeatData(nn.getNodeId(), nn.getHost(), nn.getPort(), nn.getMgmtPort());
 				HeartbeatConnector.getInstance().addConnectToThisNode(node);
 				}
 			
-			} 	*/		
+			} */		
 			
 		} else if (req.getVote().getNumber() == VoteAction.ABSTAIN_VALUE) {
 			// for some reason, I decline to vote
