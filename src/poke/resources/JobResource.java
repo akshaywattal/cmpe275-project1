@@ -15,7 +15,13 @@
  */
 package poke.resources;
 
+import java.util.Random;
+
 import poke.server.resources.Resource;
+import eye.Comm.JobProposal;
+import eye.Comm.Management;
+import eye.Comm.NameValueSet;
+import eye.Comm.NameValueSet.NodeType;
 import eye.Comm.Request;
 
 public class JobResource implements Resource {
@@ -23,6 +29,34 @@ public class JobResource implements Resource {
 	@Override
 	public Request process(Request request) {
 		// TODO Auto-generated method stub
+		
+						
+		NameValueSet.Builder option1 = NameValueSet.newBuilder();
+		option1.setNodeType(NodeType.VALUE);
+		option1.setName("YES");
+		
+		
+		NameValueSet.Builder option2 = NameValueSet.newBuilder();
+		option2.setNodeType(NodeType.VALUE);
+		option2.setName("NO");
+		
+		
+		NameValueSet.Builder options = NameValueSet.newBuilder();
+		options.addNode(option1.build());
+		options.addNode(option2.build());
+		
+	JobProposal.Builder jp = JobProposal.newBuilder();
+	jp.setJobId(request.getBody().getJobOp().getJobId());
+	//This needs to be updated to include Cluster Leader ID as Originator	
+	jp.setOwnerId(Integer.parseInt(request.getHeader().getOriginator()));
+	jp.setNameSpace(request.getBody().getJobOp().getData().getNameSpace());
+	jp.setOptions(options.build());
+	
+	Management.Builder paxos = Management.newBuilder();
+	paxos.setJobPropose(jp.build());
+	
+	
+		
 		return null;
 	}
 
