@@ -132,8 +132,12 @@ public class ElectionManager {
 			
 			//if(Integer.parseInt(leaderId)>= Integer.parseInt(req.getBallotId()))	
 			leaderId = req.getBallotId();	
-			if(leaderId.equals(nodeId)) setLeader(true);
+			if(leaderId.equals(nodeId)) setLeader(true);  //here we need to update leader info with DNS server
 			else setLeader(false);
+			
+		
+			
+			
 				/*
 				for (NodeDesc nn : conf.getNearest().getNearestNodes().values()) {
 				if(nn.getNodeId().equals(leaderId))

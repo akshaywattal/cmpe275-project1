@@ -184,7 +184,7 @@ public class PerChannelQueue implements ChannelQueue {
 					if (conn.isWritable()) {
 						boolean rtn = false;
 						if (channel != null && channel.isOpen() && channel.isWritable()) {
-							ChannelFuture cf = channel.write(msg);
+							ChannelFuture cf = channel.writeAndFlush(msg);
 
 							// blocks on write - use listener to be async
 							cf.awaitUninterruptibly();
@@ -247,7 +247,7 @@ public class PerChannelQueue implements ChannelQueue {
 
 						// handle it locally
 						Resource rsc = ResourceFactory.getInstance().resourceInstance(req.getHeader());
-
+						
 						Request reply = null;
 						if (rsc == null) {
 							logger.error("failed to obtain resource for " + req);
@@ -255,6 +255,9 @@ public class PerChannelQueue implements ChannelQueue {
 									"Request not processed");
 						} else
 							reply = rsc.process(req);
+							logger.info(reply.getBody().getPing().getTag());
+							//logger.info(reply.getBody().getPing().getNumber());
+							
 
 						sq.enqueueResponse(reply, null);
 					}

@@ -112,10 +112,10 @@ public class InboundMgmtWorker extends Thread {
 					new NetworkThread().start();
 				} else if (req.hasJobBid()) {
 					logger.info("Job Bid Message received");
-					JobManager.getInstance().processRequest(req.getJobBid());
+					JobManager.getInstance().processRequest(req.getJobBid(), ch, sa);
 				} else if (req.hasJobPropose()) {
 					logger.info("Job Proposal Message received");
-					JobManager.getInstance().processRequest(req.getJobPropose());
+					JobManager.getInstance().processRequest(req.getJobPropose(), ch, sa);
 				} else
 					logger.error("Unknown management message");
 

@@ -110,8 +110,9 @@ public class CommConnection {
 		group = new NioEventLoopGroup();
 		try {
 			handler = new CommHandler();
+			CommInitializer cmi = new CommInitializer(false,handler);
 			Bootstrap b = new Bootstrap();
-			b.group(group).channel(NioSocketChannel.class).handler(handler);
+			b.group(group).channel(NioSocketChannel.class).handler(cmi);
 			b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000);
 			b.option(ChannelOption.TCP_NODELAY, true);
 			b.option(ChannelOption.SO_KEEPALIVE, true);
@@ -185,11 +186,13 @@ public class CommConnection {
 					// block until a message is enqueued
 					GeneratedMessage msg = conn.outbound.take();
 					if (ch.isWritable()) {
-						CommHandler handler = conn.connect().pipeline().get(CommHandler.class);
-
-						if (!handler.send(msg))
-							conn.outbound.putFirst(msg);
-
+						//CommHandler handler = conn.connect().pipeline().get(CommHandler.class);
+						ChannelFuture cf = ch.writeAndFlush(msg);
+						if (cf.isDone() && !cf.isSuccess())
+						//if (!handler.send(msg, ch))
+						conn.outbound.putFirst(msg);
+						//cf.channel().close();
+						
 					} else
 						conn.outbound.putFirst(msg);
 				} catch (InterruptedException ie) {
@@ -228,6 +231,8 @@ public class CommConnection {
 			// we lost the connection or have shutdown.
 
 			// @TODO if lost, try to re-establish the connection
+			
+			//future.channel().close();
 		}
 	}
 }
