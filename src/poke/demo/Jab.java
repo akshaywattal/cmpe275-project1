@@ -38,10 +38,10 @@ public class Jab {
 		CommListener listener = new ClientPrintListener("jab demo");
 		cc.addListener(listener);
 
-		for (int i = 0; i < 3; i++) {
-			count++;
+		//for (int i = 0; i < 3; i++) {
+			//count++;
 			cc.poke(tag, count);
-		}
+		//}
 	}
 
 	public static void main(String[] args) {

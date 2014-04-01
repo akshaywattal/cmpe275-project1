@@ -80,11 +80,12 @@ public class ClientCommand {
 		f.setNumber(num);*/
 		
 		User.Builder f = User.newBuilder();
-		f.setUserId("ABC-1");
-		f.setUserName("Akshay");
+		f.setUserId("MOOC-3");
+		f.setUserName("akwattal");
+		f.setPassword("123");
 		
 		NameSpaceOperation.Builder b = NameSpaceOperation.newBuilder();
-		b.setAction(SpaceAction.ADDSPACE);
+		b.setAction(SpaceAction.LISTSPACES);
 		b.setUId(f.build());
 		
 		// payload containing data

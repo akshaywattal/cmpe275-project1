@@ -83,13 +83,13 @@ public class NameSpaceResource implements Resource {
 				int authenticated=400;
 				BasicDBObject query1 = new BasicDBObject();
 				List<BasicDBObject> query1List = new ArrayList<BasicDBObject>();
-				query1List.add(new BasicDBObject("username", user.getUserId()));
+				query1List.add(new BasicDBObject("username", user.getName()));
 				query1List.add(new BasicDBObject("password", user.getPassword()));
 				query1.put("$and", query1List);
 
 				DBCursor cursor = mclient.findData(query1);
 				while (cursor.hasNext()) {
-				//System.out.println(cursor.next());
+				cursor.next();
 				authenticated=200;
 				}
 				if(authenticated==200)
