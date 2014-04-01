@@ -52,7 +52,7 @@ public class Jab {
 			// we are running asynchronously
 			System.out.println("\nExiting in 5 seconds");
 			Thread.sleep(5000);
-			System.exit(0);
+			//System.exit(0);
 
 		} catch (Exception e) {
 			e.printStackTrace();

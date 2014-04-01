@@ -32,10 +32,12 @@ import poke.server.storage.MongoDBDAO;
 import eye.Comm.Header;
 import eye.Comm.Header.Routing;
 import eye.Comm.NameSpace;
+import eye.Comm.NameSpaceOperation;
 import eye.Comm.NameSpaceStatus;
 import eye.Comm.Payload;
 import eye.Comm.PokeStatus;
 import eye.Comm.Request;
+import eye.Comm.NameSpaceOperation.SpaceAction;
 import eye.Comm.Request.Builder;
 
 public class NameSpaceResource implements Resource {
@@ -180,8 +182,8 @@ public class NameSpaceResource implements Resource {
 	
 	public Request buildMessage(Request request,PokeStatus pks, String message)
 	{
-	Request.Builder reply = Request.newBuilder();
-	NameSpaceStatus.Builder ns = NameSpaceStatus.newBuilder();
+	Request.Builder r = Request.newBuilder();
+	/*NameSpaceStatus.Builder ns = NameSpaceStatus.newBuilder();
 	ns.setStatus(pks);
 	Payload.Builder py = Payload.newBuilder();
 	py.setSpaceStatus(ns.build());
@@ -191,7 +193,42 @@ public class NameSpaceResource implements Resource {
 	he.setReplyMsg(message);
 	he.setReplyCode(pks);
 	reply.setHeader(he.build());
-	reply.setBody(py.build());
-	return reply.build();
+	reply.setBody(py.build());*/
+		eye.Comm.User.Builder f = eye.Comm.User.newBuilder();
+		f.setUserId("ABC-1");
+		f.setUserName("Akshay");
+		
+		NameSpaceOperation.Builder b = NameSpaceOperation.newBuilder();
+		b.setAction(SpaceAction.ADDSPACE);
+		b.setUId(f.build());
+		
+		// payload containing data
+		/*Request.Builder r = Request.newBuilder();
+		eye.Comm.Payload.Builder p = Payload.newBuilder();
+		p.setPing(f.build());
+		r.setBody(p.build());*/
+		
+		//Request.Builder r = Request.newBuilder();
+		eye.Comm.Payload.Builder p = Payload.newBuilder();
+		p.setSpaceOp(b.build());
+		r.setBody(p.build());
+		
+		// header with routing info
+		/*eye.Comm.Header.Builder h = Header.newBuilder();
+		h.setOriginator("client");
+		h.setTag("test finger");
+		h.setTime(System.currentTimeMillis());
+		h.setRoutingId(eye.Comm.Header.Routing.PING);
+		r.setHeader(h.build());*/
+		
+		eye.Comm.Header.Builder h = Header.newBuilder();
+		h.setOriginator("client");
+		h.setRoutingId(eye.Comm.Header.Routing.NAMESPACES);
+		h.setReplyMsg(message);
+		r.setHeader(h.build());
+		
+		
+		eye.Comm.Request reply = r.build();
+	return reply;
 	}
 }

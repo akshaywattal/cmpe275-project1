@@ -21,9 +21,13 @@ import org.slf4j.LoggerFactory;
 import poke.client.comm.CommConnection;
 import poke.client.comm.CommListener;
 import eye.Comm.Header;
+import eye.Comm.Header.Routing;
+import eye.Comm.NameSpaceOperation;
+import eye.Comm.NameSpaceOperation.SpaceAction;
 import eye.Comm.Payload;
 import eye.Comm.Ping;
 import eye.Comm.Request;
+import eye.Comm.User;
 
 /**
  * The command class is the concrete implementation of the functionality of our
@@ -71,24 +75,43 @@ public class ClientCommand {
 	 */
 	public void poke(String tag, int num) {
 		// data to send
-		Ping.Builder f = eye.Comm.Ping.newBuilder();
+		/*Ping.Builder f = eye.Comm.Ping.newBuilder();
 		f.setTag(tag);
-		f.setNumber(num);
-
+		f.setNumber(num);*/
+		
+		User.Builder f = User.newBuilder();
+		f.setUserId("ABC-1");
+		f.setUserName("Akshay");
+		
+		NameSpaceOperation.Builder b = NameSpaceOperation.newBuilder();
+		b.setAction(SpaceAction.ADDSPACE);
+		b.setUId(f.build());
+		
 		// payload containing data
-		Request.Builder r = Request.newBuilder();
+		/*Request.Builder r = Request.newBuilder();
 		eye.Comm.Payload.Builder p = Payload.newBuilder();
 		p.setPing(f.build());
+		r.setBody(p.build());*/
+		
+		Request.Builder r = Request.newBuilder();
+		eye.Comm.Payload.Builder p = Payload.newBuilder();
+		p.setSpaceOp(b.build());
 		r.setBody(p.build());
-
+		
 		// header with routing info
-		eye.Comm.Header.Builder h = Header.newBuilder();
+		/*eye.Comm.Header.Builder h = Header.newBuilder();
 		h.setOriginator("client");
 		h.setTag("test finger");
 		h.setTime(System.currentTimeMillis());
 		h.setRoutingId(eye.Comm.Header.Routing.PING);
+		r.setHeader(h.build());*/
+		
+		eye.Comm.Header.Builder h = Header.newBuilder();
+		h.setOriginator("client");
+		h.setRoutingId(eye.Comm.Header.Routing.NAMESPACES);
 		r.setHeader(h.build());
-
+		
+		
 		eye.Comm.Request req = r.build();
 
 		try {

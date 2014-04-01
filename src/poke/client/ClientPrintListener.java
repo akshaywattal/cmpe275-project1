@@ -50,7 +50,7 @@ public class ClientPrintListener implements CommListener {
 		if (msg.getHeader().getRoutingId().getNumber() == Header.Routing.PING_VALUE)
 			ClientUtil.printPing(msg.getBody().getPing());
 		else if (msg.getHeader().getRoutingId().getNumber() == Header.Routing.NAMESPACES_VALUE) {
-			// namespace responses
+			System.out.println(msg.getHeader().getReplyMsg());
 		} else if (msg.getHeader().getRoutingId().getNumber() == Header.Routing.JOBS_VALUE) {
 			// job responses
 		} else if (msg.getHeader().getRoutingId().getNumber() == Header.Routing.MANAGE_VALUE) {
