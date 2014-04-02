@@ -43,25 +43,24 @@ import eye.Comm.Request.Builder;
 public class NameSpaceResource implements Resource {
 	protected static Logger logger = LoggerFactory.getLogger("server");
 	
-	
 	@Override
 	public Request process(Request request) {
 		
 		// TODO Auto-generated method stub
-		
-		Request reply = buildMessage(request,PokeStatus.NOFOUND, "Request not fulfilled"); ;
+		Request reply = buildMessage(request,PokeStatus.NOFOUND, "Request not fulfilled", request.getBody().getSpaceOp().getAction());
 		MongoDBDAO mclient = new MongoDBDAO();
+		
 		try {
 			mclient.getDBConnection(mclient.getDbHostName(), mclient.getDbPortNumber());
 			mclient.getDB(mclient.getDbName());
-		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-			
+			} catch (UnknownHostException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				}
+		
 		//If Request is for User CRUD operations
-		if(request.getBody().getSpaceOp().hasUId())
-		{
+		if(request.getBody().getSpaceOp().hasUId())	{
+			
 			mclient.getCollection("usercollection");
 			User user = new User();
 			user.setUserId(request.getBody().getSpaceOp().getUId().getUserId());
@@ -70,16 +69,15 @@ public class NameSpaceResource implements Resource {
 			user.setCity(request.getBody().getSpaceOp().getUId().getCity());
 			user.setZipCode(request.getBody().getSpaceOp().getUId().getZipcode());
 			
-			switch(request.getBody().getSpaceOp().getAction())
+			switch(request.getBody().getSpaceOp().getAction())	
 			{
 			case ADDSPACE:
 				BasicDBObject doc = new BasicDBObject("userid",user.getUserId()).append("username", user.getName()).append("password", user.getPassword()).append("city", user.getCity()).append("zipcode", user.getZipCode());
 				mclient.insertData(doc);
-				 reply = buildMessage(request,PokeStatus.SUCCESS, "User added to database");
-									
+				reply = buildMessage(request,PokeStatus.SUCCESS, "User added to database",SpaceAction.ADDSPACE);
 				break;
+			
 			case LISTSPACES:
-				
 				int authenticated=400;
 				BasicDBObject query1 = new BasicDBObject();
 				List<BasicDBObject> query1List = new ArrayList<BasicDBObject>();
@@ -89,100 +87,102 @@ public class NameSpaceResource implements Resource {
 
 				DBCursor cursor = mclient.findData(query1);
 				while (cursor.hasNext()) {
-				cursor.next();
-				authenticated=200;
+					cursor.next();
+					authenticated=200;
 				}
+				
 				if(authenticated==200)
-				reply = buildMessage(request,PokeStatus.SUCCESS, "User login successful");
+					reply = buildMessage(request,PokeStatus.SUCCESS, "User login successful", SpaceAction.LISTSPACES);
 				else	
-				reply = buildMessage(request,PokeStatus.FAILURE, "User login failed!");	
-					
+					reply = buildMessage(request,PokeStatus.FAILURE, "User login failed!", SpaceAction.LISTSPACES);	
 				break;
 				
 			case REMOVESPACE:
 				BasicDBObject rem = new BasicDBObject("userid",user.getUserId());
 				mclient.deleteData(rem);
-				reply = buildMessage(request,PokeStatus.SUCCESS, "User deleted");
+				reply = buildMessage(request,PokeStatus.SUCCESS, "User deleted", SpaceAction.REMOVESPACE);
 				break;
 				
 			case UPDATESPACE:
 				BasicDBObject que = new BasicDBObject("userid",user.getUserId());
 				BasicDBObject upd = new BasicDBObject("userid",user.getUserId()).append("username", user.getName()).append("password", user.getPassword()).append("city", user.getCity()).append("zipcode", user.getZipCode());
 				mclient.updateData(que, upd);
-				reply = buildMessage(request,PokeStatus.SUCCESS, "User updated");
+				reply = buildMessage(request,PokeStatus.SUCCESS, "User updated", SpaceAction.UPDATESPACE);
 				break;
 				
 			default:
-				break;}
-		}
+				break;
+				}
+			}
 		
 		//If Request is for Course CRUD operations
-		else if(request.getBody().getSpaceOp().hasCId())
-		{
+		else if(request.getBody().getSpaceOp().hasCId()) {
 			mclient.getCollection("coursecollection");
 			Course course = new Course();
 			course.setCourseId(request.getBody().getSpaceOp().getCId().getCourseId());
 			course.setCourseName(request.getBody().getSpaceOp().getCId().getCourseName());
 			course.setCourseDescription(request.getBody().getSpaceOp().getCId().getCourseDescription());
 			course.setAddCode(request.getBody().getSpaceOp().getCId().getAddCode());
-			
 					
-			switch(request.getBody().getSpaceOp().getAction())
-			{
+			switch(request.getBody().getSpaceOp().getAction()) {
 			case ADDSPACE:
 				BasicDBObject doc = new BasicDBObject("courseid",course.getCourseId()).append("coursename", course.getCourseName()).append("coursedesc", course.getCourseDescription()).append("addcode", course.getAddCode());
 				mclient.insertData(doc);
-				reply = buildMessage(request,PokeStatus.SUCCESS, "Course added to database");				
-				
+				reply = buildMessage(request,PokeStatus.SUCCESS, "Course added to database", SpaceAction.ADDSPACE);				
 				break;
-			case LISTSPACES:
 				
+			case LISTSPACES:	
 				BasicDBObject view = new BasicDBObject("courseid",course.getCourseId());
 				DBCursor cursor = mclient.findData(view);
-				NameSpace.Builder nm = NameSpace.newBuilder();
-				Request.Builder rep = Request.newBuilder();
-				NameSpaceStatus.Builder ns = NameSpaceStatus.newBuilder();
-				ns.setStatus(PokeStatus.SUCCESS);
+				Request.Builder r = Request.newBuilder();
+				eye.Comm.Course.Builder f = eye.Comm.Course.newBuilder();
+				
 				while (cursor.hasNext()) {
-					System.out.println(cursor.next());
-					
+					f.setCourseId((String) cursor.next().get("courseid"));
+					f.setCourseName((String) cursor.curr().get("coursename"));
+					f.setCourseDescription((String) cursor.curr().get("coursedesc"));
 					}
-				Payload.Builder py = Payload.newBuilder();
-				py.setSpaceStatus(ns.build());
-				Header.Builder he = Header.newBuilder();
-				he.setRoutingId(Routing.NAMESPACES);
-				he.setOriginator(request.getHeader().getOriginator());
-				he.setReplyMsg("Course Details");
-				he.setReplyCode(PokeStatus.SUCCESS);
-				rep.setHeader(he.build());
-				rep.setBody(py.build());
 				
+				NameSpaceOperation.Builder b = NameSpaceOperation.newBuilder();
+				b.setAction(SpaceAction.LISTSPACES);
+				b.setCId(f.build());
 				
+				eye.Comm.Payload.Builder p = Payload.newBuilder();
+				p.setSpaceOp(b.build());
+				r.setBody(p.build());
+				
+				eye.Comm.Header.Builder h = Header.newBuilder();
+				h.setOriginator("client");
+				h.setRoutingId(eye.Comm.Header.Routing.NAMESPACES);
+				h.setReplyMsg("Course Details");
+				r.setHeader(h.build());
+				
+				reply = r.build();
 				break;
 				
 			case REMOVESPACE:
 				BasicDBObject rem = new BasicDBObject("courseid",course.getCourseId());
 				mclient.deleteData(rem);
-				reply = buildMessage(request,PokeStatus.SUCCESS, "Course deleted");
+				reply = buildMessage(request,PokeStatus.SUCCESS, "Course deleted", SpaceAction.REMOVESPACE);
 				break;
+				
 			case UPDATESPACE:
 				BasicDBObject que = new BasicDBObject("courseid",course.getCourseId());
 				BasicDBObject upd =  new BasicDBObject("courseid",course.getCourseId()).append("coursename", course.getCourseName()).append("coursedesc", course.getCourseDescription()).append("addcode", course.getAddCode());
 				mclient.updateData(que, upd);
-				reply = buildMessage(request,PokeStatus.SUCCESS, "Course updated");
+				reply = buildMessage(request,PokeStatus.SUCCESS, "Course updated", SpaceAction.UPDATESPACE);
 				break;
+				
 			default:
 				break;}
-		}
-		
+			}
 		
 		mclient.closeConnection();
 		return reply;
-	}
+		}
 	
-	public Request buildMessage(Request request,PokeStatus pks, String message)
+	public Request buildMessage(Request request,PokeStatus pks, String message, SpaceAction spAction)
 	{
-	Request.Builder r = Request.newBuilder();
 	/*NameSpaceStatus.Builder ns = NameSpaceStatus.newBuilder();
 	ns.setStatus(pks);
 	Payload.Builder py = Payload.newBuilder();
@@ -194,14 +194,57 @@ public class NameSpaceResource implements Resource {
 	he.setReplyCode(pks);
 	reply.setHeader(he.build());
 	reply.setBody(py.build());*/
+		
+	//If CRUD is for User
+	if (request.getBody().getSpaceOp().hasUId()) {
+		Request.Builder r = Request.newBuilder();
 		eye.Comm.User.Builder f = eye.Comm.User.newBuilder();
-		f.setUserId("ABC-1");
-		f.setUserName("Akshay");
+		f.setUserId(request.getBody().getSpaceOp().getUId().getUserId());
 		
 		NameSpaceOperation.Builder b = NameSpaceOperation.newBuilder();
-		b.setAction(SpaceAction.ADDSPACE);
+		b.setAction(spAction);
 		b.setUId(f.build());
 		
+		eye.Comm.Payload.Builder p = Payload.newBuilder();
+		p.setSpaceOp(b.build());
+		r.setBody(p.build());
+		
+		eye.Comm.Header.Builder h = Header.newBuilder();
+		h.setOriginator("client");
+		h.setRoutingId(eye.Comm.Header.Routing.NAMESPACES);
+		h.setReplyMsg(message);
+		r.setHeader(h.build());
+		
+		eye.Comm.Request reply = r.build();
+		
+		return reply;
+		}
+	
+	//If CRUD is for Course
+	else if(request.getBody().getSpaceOp().hasCId()) {
+		Request.Builder r = Request.newBuilder();
+		eye.Comm.Course.Builder f = eye.Comm.Course.newBuilder();
+		f.setCourseId(request.getBody().getSpaceOp().getCId().getCourseId());
+		
+		NameSpaceOperation.Builder b = NameSpaceOperation.newBuilder();
+		b.setAction(spAction);
+		b.setCId(f.build());
+		
+		eye.Comm.Payload.Builder p = Payload.newBuilder();
+		p.setSpaceOp(b.build());
+		r.setBody(p.build());
+		
+		eye.Comm.Header.Builder h = Header.newBuilder();
+		h.setOriginator("client");
+		h.setRoutingId(eye.Comm.Header.Routing.NAMESPACES);
+		h.setReplyMsg(message);
+		r.setHeader(h.build());
+		
+		eye.Comm.Request reply = r.build();
+		
+		return reply;
+		} 
+	
 		// payload containing data
 		/*Request.Builder r = Request.newBuilder();
 		eye.Comm.Payload.Builder p = Payload.newBuilder();
@@ -209,9 +252,7 @@ public class NameSpaceResource implements Resource {
 		r.setBody(p.build());*/
 		
 		//Request.Builder r = Request.newBuilder();
-		eye.Comm.Payload.Builder p = Payload.newBuilder();
-		p.setSpaceOp(b.build());
-		r.setBody(p.build());
+		
 		
 		// header with routing info
 		/*eye.Comm.Header.Builder h = Header.newBuilder();
@@ -221,14 +262,14 @@ public class NameSpaceResource implements Resource {
 		h.setRoutingId(eye.Comm.Header.Routing.PING);
 		r.setHeader(h.build());*/
 		
-		eye.Comm.Header.Builder h = Header.newBuilder();
-		h.setOriginator("client");
-		h.setRoutingId(eye.Comm.Header.Routing.NAMESPACES);
-		h.setReplyMsg(message);
-		r.setHeader(h.build());
+		/*eye.Comm.Course.Builder f = eye.Comm.Course.newBuilder();
+		f.setCourseId("C-12");
+		f.setCourseName("Machine Learning");
+		f.setCourseDescription("This is a course offered for Stanford");
 		
-		
-		eye.Comm.Request reply = r.build();
-	return reply;
+		NameSpaceOperation.Builder b = NameSpaceOperation.newBuilder();
+		b.setAction(SpaceAction.ADDSPACE);
+		b.setCId(f.build());*/
+	return null;
 	}
-}
+	}

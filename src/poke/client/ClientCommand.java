@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import poke.client.comm.CommConnection;
 import poke.client.comm.CommListener;
+import eye.Comm.Course;
 import eye.Comm.Header;
 import eye.Comm.Header.Routing;
 import eye.Comm.NameSpaceOperation;
@@ -79,14 +80,20 @@ public class ClientCommand {
 		f.setTag(tag);
 		f.setNumber(num);*/
 		
-		User.Builder f = User.newBuilder();
-		f.setUserId("MOOC-3");
+		/*User.Builder f = User.newBuilder();
+		f.setUserId("MOOC-7");
 		f.setUserName("akwattal");
-		f.setPassword("123");
+		f.setPassword("123");*/
+		
+		Course.Builder f = Course.newBuilder();
+		f.setCourseId("C-13");
+		f.setCourseName("Machine Learning-2");
+		f.setCourseDescription("This is a course offered for Stanford");
 		
 		NameSpaceOperation.Builder b = NameSpaceOperation.newBuilder();
 		b.setAction(SpaceAction.LISTSPACES);
-		b.setUId(f.build());
+		b.setCId(f.build());
+		//b.setUId(f.build());
 		
 		// payload containing data
 		/*Request.Builder r = Request.newBuilder();
