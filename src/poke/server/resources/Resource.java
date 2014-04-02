@@ -15,6 +15,9 @@
  */
 package poke.server.resources;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
 import eye.Comm.Request;
 
 /**
@@ -32,7 +35,9 @@ public interface Resource {
 	 * 
 	 * @param request
 	 * @return an action
+	 * @throws IOException 
+	 * @throws FileNotFoundException 
 	 */
-	Request process(Request request);
+	Request process(Request request) throws FileNotFoundException, IOException;
 
 }

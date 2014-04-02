@@ -15,6 +15,8 @@
  */
 package poke.resources;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +25,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
 import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 
 import poke.domain.Course;
 import poke.domain.User;
@@ -44,14 +48,15 @@ public class NameSpaceResource implements Resource {
 	protected static Logger logger = LoggerFactory.getLogger("server");
 	
 	@Override
-	public Request process(Request request) {
+	public Request process(Request request) throws FileNotFoundException, IOException {
 		
 		// TODO Auto-generated method stub
 		Request reply = buildMessage(request,PokeStatus.NOFOUND, "Request not fulfilled", request.getBody().getSpaceOp().getAction());
-		MongoDBDAO mclient = new MongoDBDAO();
 		
+		MongoDBDAO mclient = new MongoDBDAO();
 		try {
-			mclient.getDBConnection(mclient.getDbHostName(), mclient.getDbPortNumber());
+			
+			mclient.getDBConnection();
 			mclient.getDB(mclient.getDbName());
 			} catch (UnknownHostException e) {
 				// TODO Auto-generated catch block
