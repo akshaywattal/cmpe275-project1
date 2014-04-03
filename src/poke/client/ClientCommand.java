@@ -20,6 +20,9 @@ import org.slf4j.LoggerFactory;
 
 import poke.client.comm.CommConnection;
 import poke.client.comm.CommListener;
+import eye.Comm.Doc;
+import eye.Comm.Course;
+import eye.Comm.Course;
 import eye.Comm.Header;
 import eye.Comm.Header.Routing;
 import eye.Comm.NameSpaceOperation;
@@ -79,13 +82,46 @@ public class ClientCommand {
 		f.setTag(tag);
 		f.setNumber(num);*/
 		
+		Doc.Builder doc = Doc.newBuilder();
+		doc.setFileName("abc.txt");
+		Payload.Builder pl = Payload.newBuilder();
+		pl.setDocId(doc.build());
+		eye.Comm.Header.Builder h = Header.newBuilder();
+		h.setOriginator("client");
+		h.setRoutingId(eye.Comm.Header.Routing.DOC);
+		
+		Request.Builder req = Request.newBuilder();
+		req.setHeader(h.build());
+		req.setBody(pl.build());
+		
+		try {
+			comm.sendMessage(req.build());
+		} catch (Exception e) {
+			logger.warn("Unable to deliver message, queuing");
+		}
+		
 		User.Builder f = User.newBuilder();
 		f.setUserId("ABC-1");
 		f.setUserName("Akshay");
+		/*User.Builder f = User.newBuilder();
+		f.setUserId("MOOC-7");
+		f.setUserName("akwattal");
+		f.setPassword("123");*/
+		
+		Course.Builder f = Course.newBuilder();
+		f.setCourseId("C-13");
+		f.setCourseName("Machine Learning-2");
+		f.setCourseDescription("This is a course offered for Stanford");
 		
 		NameSpaceOperation.Builder b = NameSpaceOperation.newBuilder();
 		b.setAction(SpaceAction.ADDSPACE);
 		b.setUId(f.build());
+		b.setAction(SpaceAction.LISTSPACES);
+		b.setCId(f.build());
+		//b.setUId(f.build());
+		b.setAction(SpaceAction.LISTSPACES);
+		b.setCId(f.build());
+		//b.setUId(f.build());
 		
 		// payload containing data
 		/*Request.Builder r = Request.newBuilder();
@@ -106,19 +142,19 @@ public class ClientCommand {
 		h.setRoutingId(eye.Comm.Header.Routing.PING);
 		r.setHeader(h.build());*/
 		
-		eye.Comm.Header.Builder h = Header.newBuilder();
-		h.setOriginator("client");
-		h.setRoutingId(eye.Comm.Header.Routing.NAMESPACES);
+		eye.Comm.Header.Builder header = Header.newBuilder();
+		header.setOriginator("client");
+		header.setRoutingId(eye.Comm.Header.Routing.NAMESPACES);
 		r.setHeader(h.build());
 		
 		
-		eye.Comm.Request req = r.build();
-
-		try {
-			comm.sendMessage(req);
-		} catch (Exception e) {
-			logger.warn("Unable to deliver message, queuing");
-		}
+//		eye.Comm.Request req = r.build();
+//
+//		try {
+//			comm.sendMessage(req);
+//		} catch (Exception e) {
+//			logger.warn("Unable to deliver message, queuing");
+//		}
 	}
 
 }

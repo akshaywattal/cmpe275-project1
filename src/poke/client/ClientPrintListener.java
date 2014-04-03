@@ -15,8 +15,17 @@
  */
 package poke.client;
 
+import io.netty.handler.codec.base64.Base64;
+
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.protobuf.ByteString;
 
 import poke.client.comm.CommListener;
 import poke.client.util.ClientUtil;
@@ -55,8 +64,25 @@ public class ClientPrintListener implements CommListener {
 			// job responses
 		} else if (msg.getHeader().getRoutingId().getNumber() == Header.Routing.MANAGE_VALUE) {
 			// management responses
-		} else {
+		} else if (msg.getHeader().getRoutingId().getNumber()== Header.Routing.DOC_VALUE){
+			System.out.println(msg.getBody().getDocId().getData());
+			ByteString data = msg.getBody().getDocId().getData();
+			byte[] byteData = data.toByteArray();
+			FileOutputStream fos;
+			try {
+				fos = new FileOutputStream(msg.getBody().getDocId().getFileName());
+				fos.write(byteData);
+				fos.flush();
+	            fos.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            			
+		}
+		else {
 			// unexpected reply - how do you handle this?
+			System.out.println("404 Not Found");
 		}
 	}
 }

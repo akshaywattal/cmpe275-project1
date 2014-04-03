@@ -79,10 +79,9 @@ message NameSpaceOperation {
    optional NameSpace data = 3;
    optional User u_id = 5;
    optional Course c_id = 6;
-
    // additional options for operation
    optional NameValueSet options = 4;
-
+   
    enum SpaceAction {
       ADDSPACE = 1;
       UPDATESPACE = 2;
@@ -91,6 +90,7 @@ message NameSpaceOperation {
    }
 }
 
+
 message User {
 	required string user_id = 1;
 	optional string user_name = 2;
@@ -98,6 +98,12 @@ message User {
 	optional string city = 4;
 	optional string zipcode = 5;
 
+}
+
+// For providing file download facility
+message Doc {
+	required string file_name = 1; 
+	optional bytes data =2;
 }
 
 message Course {
@@ -204,6 +210,7 @@ message Header {
         JOBS = 4;
         REPORTS = 10;
         MANAGE = 100;
+        DOC = 99;
         }
 }
 
@@ -219,7 +226,7 @@ message Payload {
     // replies only
     optional JobStatus job_status = 6;
     optional NameSpaceStatus space_status = 7;
-   
+    optional Doc doc_id = 8;
     // TBD
     // reports
 }
