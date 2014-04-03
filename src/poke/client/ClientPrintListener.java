@@ -18,10 +18,14 @@ package poke.client;
 import io.netty.handler.codec.base64.Base64;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,16 +72,19 @@ public class ClientPrintListener implements CommListener {
 			System.out.println(msg.getBody().getDocId().getData());
 			ByteString data = msg.getBody().getDocId().getData();
 			byte[] byteData = data.toByteArray();
-			FileOutputStream fos;
+			//FileOutputStream fos;
 			try {
-				fos = new FileOutputStream(msg.getBody().getDocId().getFileName());
-				fos.write(byteData);
-				fos.flush();
-	            fos.close();
+				File file = new File(msg.getBody().getDocId().getFileName());
+				FileUtils.writeByteArrayToFile(file, byteData);
+//				fos = new FileOutputStream(msg.getBody().getDocId().getFileName());
+//				fos.write(byteData);
+//				fos.flush();
+//	            fos.close();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			
             			
 		}
 		else {

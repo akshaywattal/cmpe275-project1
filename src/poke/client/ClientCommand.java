@@ -108,20 +108,19 @@ public class ClientCommand {
 		f.setUserName("akwattal");
 		f.setPassword("123");*/
 		
-		Course.Builder f = Course.newBuilder();
-		f.setCourseId("C-13");
-		f.setCourseName("Machine Learning-2");
-		f.setCourseDescription("This is a course offered for Stanford");
+		Course.Builder c = Course.newBuilder();
+		c.setCourseId("C-13");
+		c.setCourseName("Machine Learning-2");
+		c.setCourseDescription("This is a course offered for Stanford");
 		
 		NameSpaceOperation.Builder b = NameSpaceOperation.newBuilder();
 		b.setAction(SpaceAction.ADDSPACE);
 		b.setUId(f.build());
 		b.setAction(SpaceAction.LISTSPACES);
-		b.setCId(f.build());
+		b.setCId(c.build());
 		//b.setUId(f.build());
-		b.setAction(SpaceAction.LISTSPACES);
-		b.setCId(f.build());
-		//b.setUId(f.build());
+		
+		
 		
 		// payload containing data
 		/*Request.Builder r = Request.newBuilder();
