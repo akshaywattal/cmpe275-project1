@@ -22,8 +22,9 @@ import poke.client.comm.CommConnection;
 import poke.client.comm.CommListener;
 <<<<<<< HEAD
 import eye.Comm.Doc;
+import eye.Comm.Course;
 =======
->>>>>>> 2ca198d14f99310e2ed1cdeac86282caba4ae811
+>>>>>>> f8e524d67ca7412f20118b7ea2ca7d0a13285619
 import eye.Comm.Course;
 import eye.Comm.Header;
 import eye.Comm.Header.Routing;
@@ -107,7 +108,7 @@ public class ClientCommand {
 		f.setUserId("ABC-1");
 		f.setUserName("Akshay");
 =======
->>>>>>> 2ca198d14f99310e2ed1cdeac86282caba4ae811
+>>>>>>> f8e524d67ca7412f20118b7ea2ca7d0a13285619
 		/*User.Builder f = User.newBuilder();
 		f.setUserId("MOOC-7");
 		f.setUserName("akwattal");
@@ -122,8 +123,11 @@ public class ClientCommand {
 <<<<<<< HEAD
 		b.setAction(SpaceAction.ADDSPACE);
 		b.setUId(f.build());
+		b.setAction(SpaceAction.LISTSPACES);
+		b.setCId(f.build());
+		//b.setUId(f.build());
 =======
->>>>>>> 2ca198d14f99310e2ed1cdeac86282caba4ae811
+>>>>>>> f8e524d67ca7412f20118b7ea2ca7d0a13285619
 		b.setAction(SpaceAction.LISTSPACES);
 		b.setCId(f.build());
 		//b.setUId(f.build());

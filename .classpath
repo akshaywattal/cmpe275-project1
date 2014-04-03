@@ -20,5 +20,7 @@
 	<classpathentry kind="lib" path="/Users/shankey/Development/cmpe275-project1/lib/slf4j-simple-1.7.2.jar"/>
 	<classpathentry kind="lib" path="/Users/akshaywattal/Documents/SJSU/core-netty-4.0/lib/slf4j-simple-1.7.2.jar"/>
 	<classpathentry kind="lib" path="/Users/akshaywattal/Downloads/mongo-2.10.1.jar"/>
+	<classpathentry kind="lib" path="/Users/akshaywattal/Documents/SJSU/core-netty-4.0/lib/slf4j-simple-1.7.2.jar"/>
+	<classpathentry kind="lib" path="/Users/akshaywattal/Downloads/mongo-2.10.1.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
