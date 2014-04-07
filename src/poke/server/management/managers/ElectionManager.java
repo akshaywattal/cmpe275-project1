@@ -21,6 +21,7 @@ import io.netty.channel.ChannelFuture;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -31,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import poke.server.conf.NodeDesc;
 import poke.server.conf.ServerConf;
+import poke.server.dns.ReplicatingMap;
 import poke.server.management.ManagementQueue;
 import eye.Comm.LeaderElection;
 import eye.Comm.Management;
@@ -132,7 +134,18 @@ public class ElectionManager {
 			
 			//if(Integer.parseInt(leaderId)>= Integer.parseInt(req.getBallotId()))	
 			leaderId = req.getBallotId();	
-			if(leaderId.equals(nodeId)) setLeader(true);  //here we need to update leader info with DNS server
+			if(leaderId.equals(nodeId)) {
+				setLeader(true);  //here we need to update leader info with DNS server
+				for (NodeDesc nn: conf.getRoutingList()) {
+					if (nn.getNodeId().equals(nodeId) ){
+					nodeList.add(nn.getHost() + ":" + nn.getPort());
+					break;
+					}
+				}
+				
+				ReplicatingMap map = new ReplicatingMap("localhost", 1111);
+				map.put("0", nodeList.get(0));
+			}
 			else setLeader(false);
 			
 		

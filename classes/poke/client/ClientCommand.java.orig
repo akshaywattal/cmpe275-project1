@@ -20,8 +20,11 @@ import org.slf4j.LoggerFactory;
 
 import poke.client.comm.CommConnection;
 import poke.client.comm.CommListener;
+<<<<<<< HEAD
 import eye.Comm.Doc;
 import eye.Comm.Course;
+=======
+>>>>>>> f8e524d67ca7412f20118b7ea2ca7d0a13285619
 import eye.Comm.Course;
 import eye.Comm.Header;
 import eye.Comm.Header.Routing;
@@ -82,41 +85,52 @@ public class ClientCommand {
 		f.setTag(tag);
 		f.setNumber(num);*/
 		
-		/*Doc.Builder doc = Doc.newBuilder();
+<<<<<<< HEAD
+		Doc.Builder doc = Doc.newBuilder();
 		doc.setFileName("abc.txt");
 		Payload.Builder pl = Payload.newBuilder();
 		pl.setDocId(doc.build());
 		eye.Comm.Header.Builder h = Header.newBuilder();
 		h.setOriginator("client");
-		h.setRoutingId(eye.Comm.Header.Routing.DOC);*/
+		h.setRoutingId(eye.Comm.Header.Routing.DOC);
 		
-		//Request.Builder req = Request.newBuilder();
-		//req.setHeader(h.build());
-	//	req.setBody(pl.build());
+		Request.Builder req = Request.newBuilder();
+		req.setHeader(h.build());
+		req.setBody(pl.build());
 		
-		/*try {
+		try {
 			comm.sendMessage(req.build());
 		} catch (Exception e) {
 			logger.warn("Unable to deliver message, queuing");
-		}*/
+		}
 		
-		/*User.Builder f = User.newBuilder();
+		User.Builder f = User.newBuilder();
 		f.setUserId("ABC-1");
-		f.setUserName("Akshay");*/
-
+		f.setUserName("Akshay");
+=======
+>>>>>>> f8e524d67ca7412f20118b7ea2ca7d0a13285619
+		/*User.Builder f = User.newBuilder();
+		f.setUserId("MOOC-7");
+		f.setUserName("akwattal");
+		f.setPassword("123");*/
 		
-		Course.Builder c = Course.newBuilder();
-		c.setCourseId("C-13");
-		c.setCourseName("Machine Learning-2");
-		c.setCourseDescription("This is a course offered for Stanford");
+		Course.Builder f = Course.newBuilder();
+		f.setCourseId("C-13");
+		f.setCourseName("Machine Learning-2");
+		f.setCourseDescription("This is a course offered for Stanford");
 		
 		NameSpaceOperation.Builder b = NameSpaceOperation.newBuilder();
+<<<<<<< HEAD
 		b.setAction(SpaceAction.ADDSPACE);
+		b.setUId(f.build());
 		b.setAction(SpaceAction.LISTSPACES);
-		b.setCId(c.build());
+		b.setCId(f.build());
 		//b.setUId(f.build());
-		
-		
+=======
+>>>>>>> f8e524d67ca7412f20118b7ea2ca7d0a13285619
+		b.setAction(SpaceAction.LISTSPACES);
+		b.setCId(f.build());
+		//b.setUId(f.build());
 		
 		// payload containing data
 		/*Request.Builder r = Request.newBuilder();
@@ -140,16 +154,16 @@ public class ClientCommand {
 		eye.Comm.Header.Builder header = Header.newBuilder();
 		header.setOriginator("client");
 		header.setRoutingId(eye.Comm.Header.Routing.NAMESPACES);
-		r.setHeader(header.build());
+		r.setHeader(h.build());
 		
 		
-		eye.Comm.Request req = r.build();
-
-		try {
-			comm.sendMessage(req);
-		} catch (Exception e) {
-			logger.warn("Unable to deliver message, queuing");
-		}
+//		eye.Comm.Request req = r.build();
+//
+//		try {
+//			comm.sendMessage(req);
+//		} catch (Exception e) {
+//			logger.warn("Unable to deliver message, queuing");
+//		}
 	}
 
 }

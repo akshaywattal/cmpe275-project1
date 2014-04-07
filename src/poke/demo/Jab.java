@@ -15,9 +15,13 @@
  */
 package poke.demo;
 
+import java.util.Collection;
+
 import poke.client.ClientCommand;
 import poke.client.ClientPrintListener;
 import poke.client.comm.CommListener;
+import poke.server.dns.DataCache;
+import poke.server.dns.ReplicatingMap;
 
 /**
  * DEMO: how to use the command class
@@ -28,13 +32,26 @@ import poke.client.comm.CommListener;
 public class Jab {
 	private String tag;
 	private int count;
+	private static String[] socketConn;
+	private static String host;
+	private static int port;
+	private static Collection<Object> test;
 
 	public Jab(String tag) {
 		this.tag = tag;
 	}
 
-	public void run() {
-		ClientCommand cc = new ClientCommand("localhost", 5570);
+	public void run() throws InterruptedException {
+		
+		ReplicatingMap map = new ReplicatingMap("localhost", 1111);
+		map.values();
+		Thread.sleep(100);
+		test = DataCache.cache.values();
+		System.out.println("In Jab: " + test);
+		socketConn = test.toString().split(":");
+		host = socketConn[0].substring(1);
+		port = Integer.parseInt(socketConn[1].substring(0, socketConn[1].length() - 1));
+		ClientCommand cc = new ClientCommand( host , port );
 		CommListener listener = new ClientPrintListener("jab demo");
 		cc.addListener(listener);
 
