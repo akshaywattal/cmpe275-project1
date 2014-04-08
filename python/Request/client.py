@@ -5,17 +5,45 @@ import struct
 
  
 def buildRequest(file):
-	r = comm_pb2.Request()
-	
-	r.header.originator = "PythonClient"
-	r.header.routing_id = comm_pb2.Header.DOC
-	
-	r.body.doc_id.file_name = file
+    r = comm_pb2.Request()
+    r.header.originator = "PythonClient"
+    r.header.routing_id = comm_pb2.Header.DOC
+    r.body.job_op.data.name_space = "competition"
+    r.body.job_op.action = comm_pb2.JobOperation.ADDJOB
+    r.body.job_op.data.owner_id = 1
+    r.body.job_op.data.job_id = 'one'
+    r.body.job_op.data.status = comm_pb2.JobDesc.JOBUNKNOWN
+    r.body.doc_id.file_name = file
 #	r.body.ping.tag = tag
-
+    m = r.SerializeToString()
+    return m;
+	
+def buildUser(userID, userName):
+	r = comm_pb2.User()
+	
+	r.header.originator = "Python Client"
+	r.header.routing_id = comm_pb2.Header.NAMESPACES
+	
+	r.body.space_op.action = comm_pb2.NameSpaceOperation.ADDSPACE
+	r.body.space_op.u_id.user_id = userID
+	r.body.space_op.u_id.user_name = userName
+	
 	m = r.SerializeToString()
 	return m;
+
+def buildCourse(courseID, courseName, courseDescription):
+	r = comm_pb2.Course()
 	
+	r.header.originator = "Python Client"
+	r.header.routing_id = comm_pb2.Header.NAMESPACES
+	
+	r.body.space_op.action = comm_pb2.NameSpaceOperation.LISTSPACES;
+	r.body.space_op.c_id.course_id = courseID
+	r.body.space_op.c_id.course_name = courseName
+	r.body.space_op.c_id.course_description = courseDescription
+	
+	m = r.SerializeToString()
+	return m;
 
 def createSocket():
     host = 'localhost'
@@ -25,6 +53,7 @@ def createSocket():
     s.connect((host, port))
     print("Connected to "+(host)+" on port "+str(port))
 	#initialMessage = raw_input("Send: ")
+	msgUser = 
     msg = buildRequest("abc.txt")
     packed_len = struct.pack('>L',len(msg))
     s.sendall(packed_len + msg)
