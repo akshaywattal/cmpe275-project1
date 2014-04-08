@@ -24,7 +24,13 @@ import eye.Comm.Doc;
 import eye.Comm.Course;
 import eye.Comm.Course;
 import eye.Comm.Header;
+import eye.Comm.JobDesc;
+import eye.Comm.JobDesc.JobCode;
+import eye.Comm.JobOperation;
+import eye.Comm.JobOperation.JobAction;
+import eye.Comm.JobProposal;
 import eye.Comm.Header.Routing;
+import eye.Comm.Management;
 import eye.Comm.NameSpaceOperation;
 import eye.Comm.NameSpaceOperation.SpaceAction;
 import eye.Comm.Payload;
@@ -105,15 +111,38 @@ public class ClientCommand {
 		f.setUserName("Akshay");*/
 
 		
-		Course.Builder c = Course.newBuilder();
-		c.setCourseId("C-13");
-		c.setCourseName("Machine Learning-2");
-		c.setCourseDescription("This is a course offered for Stanford");
+		/*JobProposal.Builder j = JobProposal.newBuilder();
+		j.setNameSpace("competetion");
+		j.setOwnerId(1234);
+		j.setJobId("1234");
+		j.setWeight(10);
 		
-		NameSpaceOperation.Builder b = NameSpaceOperation.newBuilder();
-		b.setAction(SpaceAction.ADDSPACE);
-		b.setAction(SpaceAction.LISTSPACES);
-		b.setCId(c.build());
+		
+		Management.Builder m = Management.newBuilder();
+		m.setJobPropose(j.build());*/
+		
+		JobDesc.Builder jd = JobDesc.newBuilder();
+		jd.setNameSpace("competetion");
+		jd.setOwnerId(1234);
+		jd.setJobId("C-1234");
+		jd.setStatus(JobCode.JOBRECEIVED);
+		
+		
+		JobOperation.Builder jb = JobOperation.newBuilder();
+		jb.setAction(JobAction.ADDJOB);
+		jb.setJobId("C-1234");
+		jb.setData(jd.build());
+		
+		
+		//Course.Builder c = Course.newBuilder();
+		//c.setCourseId("C-131245");
+		//c.setCourseName("Machine Learning-2");
+		//c.setCourseDescription("This is a course offered for Stanford");
+		
+		//NameSpaceOperation.Builder b = NameSpaceOperation.newBuilder();
+		//b.setAction(SpaceAction.ADDSPACE);
+		//b.setAction(SpaceAction.LISTSPACES);
+		//b.setCId(c.build());
 		//b.setUId(f.build());
 		
 		
@@ -126,8 +155,8 @@ public class ClientCommand {
 		
 		Request.Builder r = Request.newBuilder();
 		eye.Comm.Payload.Builder p = Payload.newBuilder();
-		p.setSpaceOp(b.build());
-		r.setBody(p.build());
+		p.setJobOp(jb.build());
+		
 		
 		// header with routing info
 		/*eye.Comm.Header.Builder h = Header.newBuilder();
@@ -138,9 +167,10 @@ public class ClientCommand {
 		r.setHeader(h.build());*/
 		
 		eye.Comm.Header.Builder header = Header.newBuilder();
-		header.setOriginator("client");
-		header.setRoutingId(eye.Comm.Header.Routing.NAMESPACES);
+		header.setOriginator("client-1");
+		header.setRoutingId(eye.Comm.Header.Routing.JOBS);
 		r.setHeader(header.build());
+		r.setBody(p.build());
 		
 		
 		eye.Comm.Request req = r.build();

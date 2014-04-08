@@ -121,25 +121,20 @@ public class JobManager {
 			}
 		}
 		
-		else
-		{
-			
+		else {
 			Random random = new Random();
 			int bid = random.nextInt(2);
 			JobBid.Builder jbid = JobBid.newBuilder();
 			jbid.setJobId(req.getJobId());
-			jbid.setOwnerId(req.getOwnerId());
+			jbid.setOwnerId(1); //This is the Cluster ID
 			jbid.setNameSpace(req.getNameSpace());
 			jbid.setBid(bid);
 			
 			Management.Builder msg = Management.newBuilder();
 			msg.setJobBid(jbid.build());
 			ManagementQueue.enqueueResponse(msg.build(), channel, sa);
-			
-			
+			}
 		}
-			
-	}
 
 	/**
 	 * a job bid for my job
@@ -152,20 +147,23 @@ public class JobManager {
 	
 	long own = req.getOwnerId();	
 	//This needs to be updated to include Cluster Leader ID as Originator	
-	if(req.getOwnerId()==Long.parseLong(ElectionManager.getInstance().getLeaderId()))
+	if(req.getOwnerId()==Long.parseLong(conf.getServer().getProperty("cluster.id")))
 	{	
-		
+		//Gather Response
+		//Respond to Client
 	}
-	else
-	{	
+	else {	
 	int globalBid = 0;	
-	if (req.getBid()==1)  yesCount.getAndIncrement();  
-	else noCount.getAndIncrement();
+	if (req.getBid()==1)  
+		yesCount.getAndIncrement();  
+	else 
+		noCount.getAndIncrement();
 	
 	total.getAndIncrement();
 	
-	//total depends upon number of nodes in cluster
-	if(total.get()==5 && yesCount.get()>total.get()/2)  globalBid = 1;
+	//Total depends upon number of nodes in cluster
+	if(total.get()==4 && yesCount.get()>total.get()/2) {
+		globalBid = 1;
 	
 	JobBid.Builder jbid = JobBid.newBuilder();
 	jbid.setJobId(req.getJobId());
@@ -173,11 +171,25 @@ public class JobManager {
 	jbid.setNameSpace(req.getNameSpace());
 	jbid.setBid(globalBid);
 	
+	//Figure out Channel of Originating Cluster
 	Management.Builder msg = Management.newBuilder();
 	msg.setJobBid(jbid.build());
 	ManagementQueue.enqueueResponse(msg.build(), channel, sa);
+	} 
+	else if (total.get()==4 && noCount.get()>total.get()/2) {
+		globalBid = 0;
 	
+	JobBid.Builder jbid = JobBid.newBuilder();
+	jbid.setJobId(req.getJobId());
+	jbid.setOwnerId(req.getOwnerId());
+	jbid.setNameSpace(req.getNameSpace());
+	jbid.setBid(globalBid);
+	
+	//Figure out Channel of Originating Cluster
+	Management.Builder msg = Management.newBuilder();
+	msg.setJobBid(jbid.build());
+	ManagementQueue.enqueueResponse(msg.build(), channel, sa);
 	}
-		
+	}
 	}
 }

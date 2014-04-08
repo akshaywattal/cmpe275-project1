@@ -30,33 +30,23 @@ public class JobResource implements Resource {
 	public Request process(Request request) {
 		// TODO Auto-generated method stub
 		
-						
-		NameValueSet.Builder option1 = NameValueSet.newBuilder();
-		option1.setNodeType(NodeType.VALUE);
-		option1.setName("YES");
-		
-		
-		NameValueSet.Builder option2 = NameValueSet.newBuilder();
-		option2.setNodeType(NodeType.VALUE);
-		option2.setName("NO");
-		
-		
-		NameValueSet.Builder options = NameValueSet.newBuilder();
-		options.addNode(option1.build());
-		options.addNode(option2.build());
-		
-	JobProposal.Builder jp = JobProposal.newBuilder();
-	jp.setJobId(request.getBody().getJobOp().getJobId());
-	//This needs to be updated to include Cluster Leader ID as Originator	
-	jp.setOwnerId(Integer.parseInt(request.getHeader().getOriginator()));
-	jp.setNameSpace(request.getBody().getJobOp().getData().getNameSpace());
-	jp.setOptions(options.build());
-	
-	Management.Builder paxos = Management.newBuilder();
-	paxos.setJobPropose(jp.build());
-	
-	
-		
+		if(request.getBody().getJobOp().getData().getNameSpace().equals("competetion")) {
+			
+			JobProposal.Builder jp = JobProposal.newBuilder();
+			jp.setNameSpace(request.getBody().getJobOp().getData().getNameSpace());
+			jp.setOwnerId(request.getBody().getJobOp().getData().getOwnerId());
+			jp.setJobId(String.valueOf(System.currentTimeMillis()));
+			jp.setWeight(1);
+			
+			Management.Builder paxos = Management.newBuilder();
+			paxos.setJobPropose(jp.build());
+			
+			//Fetch value from DNS
+			
+			//Broadcast to all except Self Cluster
+			
+			
+		} 	
 		return null;
 	}
 

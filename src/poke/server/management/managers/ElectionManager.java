@@ -144,7 +144,7 @@ public class ElectionManager {
 				}
 				
 				ReplicatingMap map = new ReplicatingMap("localhost", 1111);
-				map.put("0", nodeList.get(0));
+				map.put(conf.getServer().getProperty("cluster.id"), nodeList.get(0));
 			}
 			else setLeader(false);
 			

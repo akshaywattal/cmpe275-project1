@@ -20,11 +20,14 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 
 import java.lang.Thread.State;
+import java.net.SocketAddress;
+import java.util.HashMap;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import poke.server.management.managers.ElectionManager;
 import poke.server.resources.Resource;
 import poke.server.resources.ResourceFactory;
 import poke.server.resources.ResourceUtil;
@@ -47,8 +50,9 @@ import eye.Comm.Request;
  */
 public class PerChannelQueue implements ChannelQueue {
 	protected static Logger logger = LoggerFactory.getLogger("server");
-
+	private static int i=0;
 	private Channel channel;
+	private int requestProcessNodeID; 
 
 	// The queues feed work to the inbound and outbound threads (workers). The
 	// threads perform a blocking 'get' on the queue until a new event/task is
@@ -191,20 +195,20 @@ public class PerChannelQueue implements ChannelQueue {
 							rtn = cf.isSuccess();
 							if (!rtn)
 								sq.outbound.putFirst(msg);
-						}
-
-					} else
+							}
+						} else
 						sq.outbound.putFirst(msg);
 				} catch (InterruptedException ie) {
 					break;
 				} catch (Exception e) {
 					PerChannelQueue.logger.error("Unexpected communcation failure", e);
 					break;
+					}
 				}
-			}
 
 			if (!forever) {
-				PerChannelQueue.logger.info("connection queue closing");
+				PerChannelQueue.logger.info("connection queue closing, Outbound Worker");
+				//sq.shutdown(true);
 			}
 		}
 	}
@@ -213,6 +217,7 @@ public class PerChannelQueue implements ChannelQueue {
 		int workerId;
 		PerChannelQueue sq;
 		boolean forever = true;
+		
 
 		public InboundWorker(ThreadGroup tgrp, int workerId, PerChannelQueue sq) {
 			super(tgrp, "inbound-" + workerId);
@@ -242,36 +247,56 @@ public class PerChannelQueue implements ChannelQueue {
 					// process request and enqueue response
 					if (msg instanceof Request) {
 						Request req = ((Request) msg);
-
+						
+						
+						//Store PerChannelQueue per Client Request in HashMap
+						if(ElectionManager.getInstance().isLeader() && !req.getHeader().hasReplyMsg()) {
+						ClientQueueMap.clientMap.put(req.getHeader().getOriginator(), sq);
+						i++;
+						}
+						if(req.getHeader().hasReplyMsg())
+						{
+							sq = ClientQueueMap.clientMap.get(req.getHeader().getOriginator());
+							ClientQueueMap.clientMap.remove(req.getHeader().getOriginator());
+							sq.enqueueResponse(req, null);
+						}
 						// do we need to route the request?
+						//Answer: We are routing the request in ResourceFactory
 
 						// handle it locally
-						Resource rsc = ResourceFactory.getInstance().resourceInstance(req.getHeader());
-						
-						Request reply = null;
-						if (rsc == null) {
-							logger.error("failed to obtain resource for " + req);
-							reply = ResourceUtil.buildError(req.getHeader(), PokeStatus.NORESOURCE,
-									"Request not processed");
-						} else
-							reply = rsc.process(req);
-							logger.info(reply.getBody().getPing().getTag());
-							//logger.info(reply.getBody().getPing().getNumber());
+						if(!req.getHeader().hasReplyMsg()) {
+							Resource rsc = ResourceFactory.getInstance().resourceInstance(req, conn);
 							
-
-						sq.enqueueResponse(reply, null);
-					}
-
-				} catch (InterruptedException ie) {
-					break;
-				} catch (Exception e) {
-					PerChannelQueue.logger.error("Unexpected processing failure", e);
-					break;
+							Request reply = null;
+							
+							if (rsc == null && ElectionManager.getInstance().isLeader()) {
+								logger.info("Request Forwarded");
+								} 
+							else if (rsc == null) {
+								logger.error("failed to obtain resource for " + req);
+								reply = ResourceUtil.buildError(req.getHeader(), PokeStatus.NORESOURCE,
+									"Request not processed");
+								sq.enqueueResponse(reply, null);
+								} 
+							else {
+								reply = rsc.process(req);
+								logger.info(reply.getBody().getPing().getTag());
+								//logger.info(reply.getBody().getPing().getNumber());
+								sq.enqueueResponse(reply, null);
+								}
+							}
+						}
+					} catch (InterruptedException ie) {
+						break;
+						} catch (Exception e) {
+							PerChannelQueue.logger.error("Unexpected processing failure", e);
+							break;
+							}
 				}
-			}
-
+			
 			if (!forever) {
-				PerChannelQueue.logger.info("connection queue closing");
+				PerChannelQueue.logger.info("connection queue closing, Inbound Worker");
+				//sq.shutdown(true);
 			}
 		}
 	}

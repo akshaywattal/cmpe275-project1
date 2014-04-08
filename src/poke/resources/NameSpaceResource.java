@@ -157,7 +157,7 @@ public class NameSpaceResource implements Resource {
 				r.setBody(p.build());
 				
 				eye.Comm.Header.Builder h = Header.newBuilder();
-				h.setOriginator("client");
+				h.setOriginator(request.getHeader().getOriginator());
 				h.setRoutingId(eye.Comm.Header.Routing.NAMESPACES);
 				h.setReplyMsg("Course Details");
 				r.setHeader(h.build());
@@ -215,7 +215,7 @@ public class NameSpaceResource implements Resource {
 		r.setBody(p.build());
 		
 		eye.Comm.Header.Builder h = Header.newBuilder();
-		h.setOriginator("client");
+		h.setOriginator(request.getHeader().getOriginator());
 		h.setRoutingId(eye.Comm.Header.Routing.NAMESPACES);
 		h.setReplyMsg(message);
 		r.setHeader(h.build());
@@ -240,7 +240,7 @@ public class NameSpaceResource implements Resource {
 		r.setBody(p.build());
 		
 		eye.Comm.Header.Builder h = Header.newBuilder();
-		h.setOriginator("client");
+		h.setOriginator(request.getHeader().getOriginator());
 		h.setRoutingId(eye.Comm.Header.Routing.NAMESPACES);
 		h.setReplyMsg(message);
 		r.setHeader(h.build());

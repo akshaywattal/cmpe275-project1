@@ -15,15 +15,33 @@
  */
 package poke.server.resources;
 
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioSocketChannel;
+
 import java.beans.Beans;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import poke.server.ServerInitializer;
+import poke.server.conf.NodeDesc;
 import poke.server.conf.ServerConf;
 import poke.server.conf.ServerConf.ResourceConf;
+import poke.server.management.ManagementQueue;
+import poke.server.management.managers.ElectionManager;
 import eye.Comm.Header;
+import eye.Comm.Request;
 
 /**
  * Resource factory provides how the server manages resource creation. We hide
@@ -47,6 +65,12 @@ public class ResourceFactory {
 
 	private static ServerConf cfg;
 	private static AtomicReference<ResourceFactory> factory = new AtomicReference<ResourceFactory>();
+	//Added as a part of Forwarding Request
+	private ChannelFuture fchannel; // do not use directly call connect()!
+	private EventLoopGroup group;
+	private Map<String, InetSocketAddress> aliveNodes = new HashMap<String, InetSocketAddress>();
+	private SocketAddress remoteSocketAddress;
+	private SocketAddress localSocketAddress;
 
 	public static void initialize(ServerConf cfg) {
 		try {
@@ -73,29 +97,75 @@ public class ResourceFactory {
 	 * 
 	 * @param route
 	 * @return
+	 * @throws InterruptedException 
 	 */
-	public Resource resourceInstance(Header header) {
+	public Resource resourceInstance(Request req, Channel conn) throws InterruptedException {
 		// is the message for this server?
-		if (header.hasToNode()) {
+		if (req.getHeader().hasToNode()) {
 			String iam = cfg.getServer().getProperty("node.id");
-			if (iam.equalsIgnoreCase(header.getToNode()))
+			if (iam.equalsIgnoreCase(req.getHeader().getToNode()))
 				; // fall through and process normally
 			else {
 				// forward request
 			}
 		}
-
-		ResourceConf rc = cfg.findById(header.getRoutingId().getNumber());
-		if (rc == null)
+		
+		if(ElectionManager.getInstance().isLeader()) {
+			group = new NioEventLoopGroup();
+			Bootstrap b = new Bootstrap();
+			boolean compressComm = false;
+			b.group(group).channel(NioSocketChannel.class).handler(new ServerInitializer(compressComm));
+			b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000);
+			b.option(ChannelOption.TCP_NODELAY, true);
+			b.option(ChannelOption.SO_KEEPALIVE, true);
+			
+			//Gathering Information of Alive Nodes
+			for (NodeDesc nn : cfg.getRoutingList()) {
+				try { 
+					if(!nn.getNodeId().equals(ElectionManager.getInstance().getLeaderId())) {
+					InetSocketAddress isa = new InetSocketAddress( nn.getHost(), nn.getMgmtPort());
+					ManagementQueue.nodeMap.put(nn.getNodeId(), isa);
+					ChannelFuture cf = ManagementQueue.connect(isa);
+					cf.awaitUninterruptibly(50001);
+					
+					if(cf.isDone()&&cf.isSuccess())
+						aliveNodes.put(nn.getNodeId(), isa);
+					
+					cf.channel().closeFuture();
+					}
+					} catch(Exception e){logger.info("Connection refused!");}
+				}
+			
+			//Generating Random Node ID from Alive Nodes
+			Random rand = new Random();
+		    int randomNum = rand.nextInt((aliveNodes.size() - 
+		    		Integer.parseInt(ElectionManager.getInstance().getLeaderId()) + 1)) + Integer.parseInt(ElectionManager.getInstance().getLeaderId());
+		    
+		    //If Random Node ID is Same as Leader, Add One 
+		    if(randomNum == Integer.parseInt(ElectionManager.getInstance().getLeaderId()))
+		    		randomNum = randomNum + 1;
+		    		
+		    localSocketAddress = new InetSocketAddress( cfg.getRoutingList().get(randomNum).getHost(), cfg.getRoutingList().get(randomNum).getPort());
+			
+			// Make the connection attempt.
+			fchannel = b.connect(localSocketAddress).syncUninterruptibly();
+			Channel ch = fchannel.channel();
+			ch.writeAndFlush(req);
+			logger.info("I am Leader Node, request forwarded to Node: " + randomNum);
 			return null;
-
-		try {
-			// strategy: instance-per-request
-			Resource rsc = (Resource) Beans.instantiate(this.getClass().getClassLoader(), rc.getClazz());
-			return rsc;
-		} catch (Exception e) {
-			logger.error("unable to create resource " + rc.getClazz());
-			return null;
+			}
+		else {
+			ResourceConf rc = cfg.findById(req.getHeader().getRoutingId().getNumber());
+			if (rc == null)
+				return null;
+			try {
+				// strategy: instance-per-request
+				Resource rsc = (Resource) Beans.instantiate(this.getClass().getClassLoader(), rc.getClazz());
+				return rsc;
+				} catch (Exception e) {
+					logger.error("unable to create resource " + rc.getClazz());
+					return null;
+					}
+			}
 		}
 	}
-}
