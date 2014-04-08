@@ -5,16 +5,18 @@ import struct
 
  
 def buildRequest(file):
-	r = comm_pb2.Request()
-	
-	r.header.originator = "PythonClient"
-	r.header.routing_id = comm_pb2.Header.DOC
-	
-	r.body.doc_id.file_name = file
+    r = comm_pb2.Request()
+    r.header.originator = "PythonClient"
+    r.header.routing_id = comm_pb2.Header.DOC
+    r.body.job_op.data.name_space = "competition"
+    r.body.job_op.action = comm_pb2.JobOperation.ADDJOB
+    r.body.job_op.data.owner_id = 1
+    r.body.job_op.data.job_id = 'one'
+    r.body.job_op.data.status = comm_pb2.JobDesc.JOBUNKNOWN
+    r.body.doc_id.file_name = file
 #	r.body.ping.tag = tag
-
-	m = r.SerializeToString()
-	return m;
+    m = r.SerializeToString()
+    return m;
 	
 
 def createSocket():
