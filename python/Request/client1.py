@@ -4,7 +4,7 @@ import sys
 import struct
 
  
-def buildRequest(file):
+def buildFile(file):
 	r = comm_pb2.Request()
 	
 	r.header.originator = "PythonClient"
@@ -91,13 +91,16 @@ def getUserResponse(s):
 def createSocket():
     host = 'localhost'
     port = 5570
- 
+
     s = socket(AF_INET, SOCK_STREAM)
     s.connect((host, port))
     print("Connected to "+(host)+" on port "+str(port))
 	#initialMessage = raw_input("Send: ")
 	
-    msgType = "F"
+    print "Enter one of the request : "
+    print "\nF for file \nU for user \nC for course\n"
+    msgType = raw_input()
+    
     if msgType == "U":
 		msgUser = buildUser("ABC-1", "Akshay")
 		sendMessage(s, struct.pack('>L',len(msgUser)), msgUser)
@@ -109,8 +112,8 @@ def createSocket():
 		getCourseResponse(s)
 		
     elif msgType == "F":
-		msg = buildRequest("abc.txt")
+		msg = buildFile("abc.txt")
 		sendMessage(s, struct.pack('>L',len(msg)), msg)
-		getRequestResponse(s)
+		getFileResponse(s)
 		
 createSocket()
