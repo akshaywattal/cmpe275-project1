@@ -143,7 +143,7 @@ public class ElectionManager {
 					}
 				}
 				
-				ReplicatingMap map = new ReplicatingMap("localhost", 1111);
+				ReplicatingMap map = new ReplicatingMap("192.168.0.123", 1111);
 				map.put(conf.getServer().getProperty("cluster.id"), nodeList.get(0));
 			}
 			else setLeader(false);

@@ -25,6 +25,7 @@ import eye.Comm.Course;
 import eye.Comm.Course;
 import eye.Comm.Header;
 import eye.Comm.JobDesc;
+import eye.Comm.NameValueSet;
 import eye.Comm.JobDesc.JobCode;
 import eye.Comm.JobOperation;
 import eye.Comm.JobOperation.JobAction;
@@ -33,6 +34,7 @@ import eye.Comm.Header.Routing;
 import eye.Comm.Management;
 import eye.Comm.NameSpaceOperation;
 import eye.Comm.NameSpaceOperation.SpaceAction;
+import eye.Comm.NameValueSet.NodeType;
 import eye.Comm.Payload;
 import eye.Comm.Ping;
 import eye.Comm.Request;
@@ -121,11 +123,28 @@ public class ClientCommand {
 		Management.Builder m = Management.newBuilder();
 		m.setJobPropose(j.build());*/
 		
+		//Request for List Courses
+		/*JobDesc.Builder jd = JobDesc.newBuilder();
+		jd.setNameSpace("listcourses");*/
+		
+		//Request for List Courses
 		JobDesc.Builder jd = JobDesc.newBuilder();
-		jd.setNameSpace("competetion");
+		jd.setNameSpace("getdescription");
+		
+		NameValueSet.Builder nvc = NameValueSet.newBuilder();
+		NameValueSet.Builder nv = NameValueSet.newBuilder();
+		nv.setNodeType(NodeType.VALUE);
+		nvc.setNodeType(NodeType.VALUE);
+		nvc.setName("Machine Learning-2");
+		nvc.setValue("CMPE275/CS101");
+		nv.addNode(nvc.build());
+		
+		/*JobDesc.Builder jd = JobDesc.newBuilder();
+		jd.setNameSpace("competetion");*/
 		jd.setOwnerId(1234);
 		jd.setJobId("C-1234");
 		jd.setStatus(JobCode.JOBRECEIVED);
+		jd.setOptions(nv.build());
 		
 		
 		JobOperation.Builder jb = JobOperation.newBuilder();

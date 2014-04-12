@@ -84,6 +84,12 @@ public DBCursor findData(BasicDBObject query1) {
 return collDAO.find(query1);
 }
 
+public DBCursor findAll() {
+return collDAO.find();
+}
+
+
+
 public String getDbHostName() {
 return dbHostName;
 }

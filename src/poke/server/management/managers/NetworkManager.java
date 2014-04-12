@@ -59,6 +59,7 @@ public class NetworkManager {
 
 	private String nodeId;
 	private String leaderId;
+	private String clusterId;
 	ServerConf conf; 
 	List<Integer> nodeList = new ArrayList<Integer>();
 	int announcements = 0;
@@ -87,6 +88,7 @@ public class NetworkManager {
 		this.nodeId = nodeId;
 		this.conf = conf;
 		this.leaderId = conf.getServer().getProperty("leader.id");
+		this.setClusterId(conf.getServer().getProperty("cluster.id")); 
 	}
 
 	/**
@@ -173,6 +175,14 @@ public class NetworkManager {
 	//msg.setGraph(n.build());
 	msg.setElection(le.build());
 	return msg.build();
+	}
+
+	public String getClusterId() {
+		return clusterId;
+	}
+
+	public void setClusterId(String clusterId) {
+		this.clusterId = clusterId;
 	}
 	
 	

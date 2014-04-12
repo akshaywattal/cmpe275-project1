@@ -28,7 +28,7 @@ public class DNSServer {
 						new ObjectDecoder(), new DNSHandler());
 			}
 		});
-		bootstrap.bind(new InetSocketAddress("localhost",1111));
+		bootstrap.bind(new InetSocketAddress("192.168.0.123",1111));
 		System.out.println("DNS Server Started...");
 		  
 		
