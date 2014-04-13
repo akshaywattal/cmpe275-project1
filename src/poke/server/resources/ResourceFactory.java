@@ -110,7 +110,7 @@ public class ResourceFactory {
 			}
 		}
 		
-		if(ElectionManager.getInstance().isLeader()) {
+		if(ElectionManager.getInstance().isLeader() && !req.getBody().getJobOp().getData().getNameSpace().equals("competition")) {
 			group = new NioEventLoopGroup();
 			Bootstrap b = new Bootstrap();
 			boolean compressComm = false;

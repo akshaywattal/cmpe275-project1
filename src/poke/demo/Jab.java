@@ -43,15 +43,15 @@ public class Jab {
 
 	public void run() throws InterruptedException {
 		
-		ReplicatingMap map = new ReplicatingMap("localhost", 1111);
+		/*ReplicatingMap map = new ReplicatingMap("localhost", 1111);
 		map.values();
 		Thread.sleep(100);
 		test = DataCache.cache.values();
 		System.out.println("In Jab: " + test);
 		socketConn = test.toString().split(":");
 		host = socketConn[0].substring(1);
-		port = Integer.parseInt(socketConn[1].substring(0, socketConn[1].length() - 1));
-		ClientCommand cc = new ClientCommand( host , port );
+		port = Integer.parseInt(socketConn[1].substring(0, socketConn[1].length() - 1));*/
+		ClientCommand cc = new ClientCommand( "192.168.0.125" , 5570 );
 		CommListener listener = new ClientPrintListener("jab demo");
 		cc.addListener(listener);
 

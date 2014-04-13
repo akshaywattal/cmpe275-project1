@@ -65,11 +65,11 @@ public class JobResource implements Resource {
 	public Request process(Request request) throws FileNotFoundException, IOException {
 		// TODO Auto-generated method stub
 		
-		if(request.getBody().getJobOp().getData().getNameSpace().equals("competetion")) {
+		if(request.getBody().getJobOp().getData().getNameSpace().equals("competition")) {
 			
 			JobProposal.Builder jp = JobProposal.newBuilder();
 			jp.setNameSpace(request.getBody().getJobOp().getData().getNameSpace());
-			jp.setOwnerId(Long.parseLong(NetworkManager.getInstance().getClusterId()));
+			jp.setOwnerId(Long.parseLong(NetworkManager.getInstance().getClusterId())); //This should be the Cluster ID of Originator of Job Propose
 			jp.setJobId(request.getHeader().getOriginator());
 			jp.setWeight(1);
 			

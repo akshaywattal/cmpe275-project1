@@ -108,10 +108,7 @@ public class ClientCommand {
 			logger.warn("Unable to deliver message, queuing");
 		}*/
 		
-		/*User.Builder f = User.newBuilder();
-		f.setUserId("ABC-1");
-		f.setUserName("Akshay");*/
-
+	
 		
 		/*JobProposal.Builder j = JobProposal.newBuilder();
 		j.setNameSpace("competetion");
@@ -123,13 +120,82 @@ public class ClientCommand {
 		Management.Builder m = Management.newBuilder();
 		m.setJobPropose(j.build());*/
 		
-		//Request for List Courses
-		/*JobDesc.Builder jd = JobDesc.newBuilder();
-		jd.setNameSpace("listcourses");*/
+		//------Request for User Add/Modify/List/Delete START-------
+		/*User.Builder f = User.newBuilder();
+		f.setUserId("ABC-3");
+		f.setUserName("AkShBapt");
 		
-		//Request for List Courses
-		JobDesc.Builder jd = JobDesc.newBuilder();
+		NameSpaceOperation.Builder b = NameSpaceOperation.newBuilder();
+		//b.setAction(SpaceAction.ADDSPACE); // For Addition
+		//b.setAction(SpaceAction.UPDATESPACE); // For Update
+		//b.setAction(SpaceAction.LISTSPACES); //For Authentication 
+		//b.setAction(SpaceAction.REMOVESPACE); // For Removing
+		b.setUId(f.build());
+		
+		Request.Builder r = Request.newBuilder();
+		eye.Comm.Payload.Builder p = Payload.newBuilder();
+		p.setSpaceOp(b.build());
+		
+		eye.Comm.Header.Builder header = Header.newBuilder();
+		header.setOriginator("client-1");
+		header.setRoutingId(eye.Comm.Header.Routing.NAMESPACES);
+		r.setHeader(header.build());
+		r.setBody(p.build());*/
+		//------Request for User Add/Modify/List/Delete END-------
+		
+		//------Request for Course Add/Modify/List/Delete START-------
+		Course.Builder c = Course.newBuilder();
+		c.setCourseId("C-1312");
+		c.setCourseName("CMPE275");
+		c.setCourseDescription("This is a course offered at SJSU");
+				
+		NameSpaceOperation.Builder b = NameSpaceOperation.newBuilder();
+		b.setAction(SpaceAction.ADDSPACE); // For Addition
+		//b.setAction(SpaceAction.UPDATESPACE); // For Update
+		//b.setAction(SpaceAction.LISTSPACES); //For Authentication 
+		//b.setAction(SpaceAction.REMOVESPACE); // For Removing
+		b.setCId(c.build());
+				
+		Request.Builder r = Request.newBuilder();
+		eye.Comm.Payload.Builder p = Payload.newBuilder();
+		p.setSpaceOp(b.build());
+				
+		eye.Comm.Header.Builder header = Header.newBuilder();
+		header.setOriginator("client-1");
+		header.setRoutingId(eye.Comm.Header.Routing.NAMESPACES);
+		r.setHeader(header.build());
+		r.setBody(p.build());
+		//------Request for Course Add/Modify/List/Delete END-------
+		
+		//------Request for List Courses START-------
+		/*JobDesc.Builder jd = JobDesc.newBuilder();
+		jd.setNameSpace("listcourses");
+		jd.setOwnerId(1234);
+		jd.setJobId("C-1234");
+		jd.setStatus(JobCode.JOBRECEIVED);
+		
+		JobOperation.Builder jb = JobOperation.newBuilder();
+		jb.setAction(JobAction.ADDJOB);
+		jb.setJobId("C-1234");
+		jb.setData(jd.build());
+		
+		Request.Builder r = Request.newBuilder();
+		eye.Comm.Payload.Builder p = Payload.newBuilder();
+		p.setJobOp(jb.build());
+		
+		eye.Comm.Header.Builder header = Header.newBuilder();
+		header.setOriginator("client-1");
+		header.setRoutingId(eye.Comm.Header.Routing.JOBS);
+		r.setHeader(header.build());
+		r.setBody(p.build());*/
+		//------Request for List Courses END-------
+		
+		//------Request for Get Description START-------
+		/*JobDesc.Builder jd = JobDesc.newBuilder();
 		jd.setNameSpace("getdescription");
+		jd.setOwnerId(1234);
+		jd.setJobId("C-1234");
+		jd.setStatus(JobCode.JOBRECEIVED);
 		
 		NameValueSet.Builder nvc = NameValueSet.newBuilder();
 		NameValueSet.Builder nv = NameValueSet.newBuilder();
@@ -139,19 +205,30 @@ public class ClientCommand {
 		nvc.setValue("CMPE275/CS101");
 		nv.addNode(nvc.build());
 		
-		/*JobDesc.Builder jd = JobDesc.newBuilder();
-		jd.setNameSpace("competetion");*/
-		jd.setOwnerId(1234);
-		jd.setJobId("C-1234");
-		jd.setStatus(JobCode.JOBRECEIVED);
 		jd.setOptions(nv.build());
-		
 		
 		JobOperation.Builder jb = JobOperation.newBuilder();
 		jb.setAction(JobAction.ADDJOB);
 		jb.setJobId("C-1234");
 		jb.setData(jd.build());
 		
+		Request.Builder r = Request.newBuilder();
+		eye.Comm.Payload.Builder p = Payload.newBuilder();
+		p.setJobOp(jb.build());
+		
+		eye.Comm.Header.Builder header = Header.newBuilder();
+		header.setOriginator("client-1");
+		header.setRoutingId(eye.Comm.Header.Routing.JOBS);
+		r.setHeader(header.build());
+		r.setBody(p.build());*/
+		//------Request for Get Description END-------
+		
+		/*JobDesc.Builder jd = JobDesc.newBuilder();
+		jd.setNameSpace("competetion");
+		jd.setOwnerId(1234);
+		jd.setJobId("C-1234");
+		jd.setStatus(JobCode.JOBRECEIVED);
+		jd.setOptions(nv.build());*/
 		
 		//Course.Builder c = Course.newBuilder();
 		//c.setCourseId("C-131245");
@@ -172,9 +249,9 @@ public class ClientCommand {
 		p.setPing(f.build());
 		r.setBody(p.build());*/
 		
-		Request.Builder r = Request.newBuilder();
+		/*Request.Builder r = Request.newBuilder();
 		eye.Comm.Payload.Builder p = Payload.newBuilder();
-		p.setJobOp(jb.build());
+		p.setJobOp(jb.build());*/
 		
 		
 		// header with routing info
@@ -183,13 +260,13 @@ public class ClientCommand {
 		h.setTag("test finger");
 		h.setTime(System.currentTimeMillis());
 		h.setRoutingId(eye.Comm.Header.Routing.PING);
-		r.setHeader(h.build());*/
+		r.setHeader(h.build());
 		
 		eye.Comm.Header.Builder header = Header.newBuilder();
 		header.setOriginator("client-1");
 		header.setRoutingId(eye.Comm.Header.Routing.JOBS);
 		r.setHeader(header.build());
-		r.setBody(p.build());
+		r.setBody(p.build());*/
 		
 		
 		eye.Comm.Request req = r.build();

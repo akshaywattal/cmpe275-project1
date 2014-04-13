@@ -75,6 +75,7 @@ public class JobManager {
 	
 	private String nodeId;
 	private ServerConf conf;
+	public AtomicInteger countNode = new AtomicInteger(0);
 	
 	public List<InetSocketAddress> addressList = new CopyOnWriteArrayList<InetSocketAddress>();
 
@@ -157,7 +158,7 @@ public class JobManager {
 			int bid = random.nextInt(2);
 			JobBid.Builder jbid = JobBid.newBuilder();
 			jbid.setJobId(req.getJobId());
-			jbid.setOwnerId(1); //This is the Cluster ID
+			jbid.setOwnerId(req.getOwnerId()); //This is the Cluster ID
 			jbid.setNameSpace(req.getNameSpace());
 			jbid.setBid(bid);
 			
@@ -167,11 +168,14 @@ public class JobManager {
 			
 			sa = new InetSocketAddress(host[0],port);
 			
-			channel.connect(sa);
+			//channel.connect(sa);
 			
 			Management.Builder msg = Management.newBuilder();
 			msg.setJobBid(jbid.build());
-			ManagementQueue.enqueueResponse(msg.build(), channel, (SocketAddress)sa);
+			
+			ChannelFuture ch = ManagementQueue.connect(sa);
+			ch.channel().writeAndFlush(msg.build());
+			//ManagementQueue.enqueueResponse(msg.build(), channel, (SocketAddress)sa);
 			}
 		}
 
@@ -189,6 +193,21 @@ public class JobManager {
 	if(req.getOwnerId()==Long.parseLong(conf.getServer().getProperty("cluster.id")))
 	{	
 		//Gather Response
+		Map<String, Object> test = null;
+		try {
+			ReplicatingMap map = new ReplicatingMap("192.168.0.123", 1111);
+			map.values();
+			Thread.sleep(1000);
+			test = DataCache.cache;
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
+		if(test.size()-1==countNode.getAndIncrement()) {	
+			winner.set(0);
+			countNode.set(0);
+		}
 		
 		if(req.getBid() == 1 && winner.get()==0) {
 			Request.Builder r = Request.newBuilder();
@@ -223,7 +242,12 @@ public class JobManager {
 			sq.enqueueResponse(reqFinal, null);
 			System.out.println("The competetion will be held at :" + req.getBid());
 			winner.set(1);
+		} else
+		{
+			System.out.println("Got Job Bid as 0");
 		}
+		
+		
 		//Respond to Client
 	}
 	else {	
