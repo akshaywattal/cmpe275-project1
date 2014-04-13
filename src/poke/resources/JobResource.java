@@ -151,7 +151,7 @@ public class JobResource implements Resource {
 			
 			
 			eye.Comm.Header.Builder header = Header.newBuilder();
-			header.setOriginator("client-1");
+			header.setOriginator(request.getHeader().getOriginator());
 			header.setRoutingId(eye.Comm.Header.Routing.JOBS);
 			header.setReplyMsg("Course Details Gash");
 			r.setHeader(header.build());
@@ -208,7 +208,7 @@ public class JobResource implements Resource {
 			
 			
 			eye.Comm.Header.Builder header = Header.newBuilder();
-			header.setOriginator("client-1");
+			header.setOriginator(request.getHeader().getOriginator());
 			header.setRoutingId(eye.Comm.Header.Routing.JOBS);
 			header.setReplyMsg("Course Description Gash");
 			r.setHeader(header.build());

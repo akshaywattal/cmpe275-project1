@@ -144,7 +144,7 @@ public class ClientCommand {
 		//------Request for User Add/Modify/List/Delete END-------
 		
 		//------Request for Course Add/Modify/List/Delete START-------
-		Course.Builder c = Course.newBuilder();
+		/*Course.Builder c = Course.newBuilder();
 		c.setCourseId("C-1312");
 		c.setCourseName("CMPE275");
 		c.setCourseDescription("This is a course offered at SJSU");
@@ -164,11 +164,11 @@ public class ClientCommand {
 		header.setOriginator("client-1");
 		header.setRoutingId(eye.Comm.Header.Routing.NAMESPACES);
 		r.setHeader(header.build());
-		r.setBody(p.build());
+		r.setBody(p.build());*/
 		//------Request for Course Add/Modify/List/Delete END-------
 		
 		//------Request for List Courses START-------
-		/*JobDesc.Builder jd = JobDesc.newBuilder();
+		JobDesc.Builder jd = JobDesc.newBuilder();
 		jd.setNameSpace("listcourses");
 		jd.setOwnerId(1234);
 		jd.setJobId("C-1234");
@@ -187,7 +187,7 @@ public class ClientCommand {
 		header.setOriginator("client-1");
 		header.setRoutingId(eye.Comm.Header.Routing.JOBS);
 		r.setHeader(header.build());
-		r.setBody(p.build());*/
+		r.setBody(p.build());
 		//------Request for List Courses END-------
 		
 		//------Request for Get Description START-------
