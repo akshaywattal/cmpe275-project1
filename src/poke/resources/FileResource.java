@@ -49,7 +49,8 @@ public class FileResource implements Resource{
 		
 		//File file = new File(fileName);
 		
-		Path path = Paths.get("/Users/shankey/"+fileName);
+		Path path = Paths.get(fileName);
+		System.out.println(path);
 		byte[] fileData = null;
 		//ByteString dat = ByteString.copyFrom(fileData);
 		String fileNameInDir = path.getFileName().toString();
