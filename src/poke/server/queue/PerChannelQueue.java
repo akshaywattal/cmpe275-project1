@@ -280,9 +280,10 @@ public class PerChannelQueue implements ChannelQueue {
 								} 
 							else {
 								reply = rsc.process(req);
-								logger.info(reply.getBody().getPing().getTag());
-								//logger.info(reply.getBody().getPing().getNumber());
-								sq.enqueueResponse(reply, null);
+								//logger.info(reply.getBody().getPing().getTag());
+								//logger.info(reply.getBody().getPing().getNumber()); 
+								if(reply != null)
+									sq.enqueueResponse(reply, null);
 								}
 							}
 						}
