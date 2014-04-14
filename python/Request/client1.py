@@ -64,6 +64,20 @@ def getCourseDescriptionResponse(Socket):
         Socket.sendall(response)
         Socket.close()
 
+def getVotingResponse(Socket):
+    while True:
+        data = Socket.recv(1024)
+        r = comm_pb2.Request()
+        print(data)
+        r.ParseFromString(data)
+        print("Recieved course name : "+(r.body.job_op.data.options.name))
+        print("Recieved course value : "+(r.body.job_op.data.options.value))
+        response = raw_input("Reply: ")
+        if response == "exit":
+            return
+        Socket.sendall(response)
+        Socket.close()
+
 def buildListAllCourses():
     r = comm_pb2.Request()
     r.header.originator = "client-1"
@@ -71,6 +85,20 @@ def buildListAllCourses():
     r.body.job_op.action = comm_pb2.JobOperation.ADDJOB
     r.body.job_op.job_id = "C-1234"
     r.body.job_op.data.name_space = "listcourses"
+    r.body.job_op.data.owner_id = 1234
+    r.body.job_op.data.job_id = "C-1234"
+    r.body.job_op.data.status = comm_pb2.JobDesc.JOBRECEIVED
+    #r.body.job_op.data.options.node_type = comm_pb2.NameValueSet.NODE
+    m = r.SerializeToString()
+    return m
+
+def buildVotingRequest():
+    r = comm_pb2.Request()
+    r.header.originator = "client-1"
+    r.header.routing_id = comm_pb2.Header.JOBS
+    r.body.job_op.action = comm_pb2.JobOperation.ADDJOB
+    r.body.job_op.job_id = "C-1234"
+    r.body.job_op.data.name_space = "competition"
     r.body.job_op.data.owner_id = 1234
     r.body.job_op.data.job_id = "C-1234"
     r.body.job_op.data.status = comm_pb2.JobDesc.JOBRECEIVED
@@ -165,7 +193,7 @@ def createSocket():
 	#initialMessage = raw_input("Send: ")
 	
     print "Enter one of the request : "
-    print "\nF for file \nU for user \nC for course\nD for List All Courses (Standardized)\nG for Get Course Description(Standardized)"
+    print "\nF for file \nU for user \nC for course\nD for List All Courses (Standardized)\nG for Get Course Description(Standardized)\nV for Voting"
     msgType = raw_input()
     
     if msgType == "U":
@@ -187,10 +215,16 @@ def createSocket():
         msg = buildGetCourseDescription()
         sendMessage(s, struct.pack('>L',len(msg)), msg)
         getCourseDescriptionResponse(s)
+
     elif msgType == "D":
         msg = buildListAllCourses()
         sendMessage(s, struct.pack('>L',len(msg)), msg)
         getListCoursesResponse(s)
+    
+    elif msgType == "V":
+        msg = buildVotingRequest()
+        sendMessage(s, struct.pack('>L',len(msg)), msg)
+        getVotingResponse(s)
 
 
 createSocket()
